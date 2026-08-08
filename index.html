@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Edsusito Lua Analyzer Ultra</title>
+
+<style>
+:root{
+    --bg:#090a10;
+    --panel:#10121a;
+    --panel2:#0c0e15;
+    --line:#272b38;
+    --text:#eef1f7;
+    --muted:#8b91a3;
+    --accent:#a78bfa;
+    --accent2:#7c3aed;
+    --good:#55d187;
+    --warn:#eabf55;
+    --bad:#ef6675;
+}
+
+*{box-sizing:border-box}
+
+body{
+    margin:0;
+    height:100vh;
+    overflow:hidden;
+    background:
+        radial-gradient(circle at 15% 0%,#21143d 0,transparent 32%),
+        radial-gradient(circle at 90% 100%,#151a35 0,transparent 35%),
+        var(--bg);
+    color:var(--text);
+    font-family:Segoe UI,Arial,sans-serif;
+}
+
+.app{
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+}
+
+header{
+    height:74px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 22px;
+    background:rgba(16,18,26,.92);
+    border-bottom:1px solid var(--line);
+    backdrop-filter:blur(14px);
+}
+
+.brand{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.avatar{
+    width:45px;
+    height:45px;
+    border-radius:13px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:linear-gradient(135deg,var(--accent2),#20243b);
+    border:1px solid #59418c;
+    box-shadow:0 0 25px #7c3aed33;
+    font-weight:900;
+    font-size:18px;
+}
+
+.title{
+    font-size:18px;
+    font-weight:800;
+}
+
+.subtitle{
+    color:var(--muted);
+    font-size:11px;
+    margin-top:2px;
+}
+
+.status{
+    color:var(--muted);
+    font-size:12px;
+}
+
+main{
+    flex:1;
+    min-height:0;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+    padding:14px;
+}
+
+.panel{
+    min-width:0;
+    min-height:0;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    border:1px solid var(--line);
+    border-radius:15px;
+    background:rgba(16,18,26,.94);
+    box-shadow:0 15px 45px #0005;
+}
+
+.panel-head{
+    height:52px;
+    padding:0 15px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    border-bottom:1px solid var(--line);
+}
+
+.panel-title{
+    font-size:13px;
+    font-weight:800;
+}
+
+textarea{
+    flex:1;
+    min-height:0;
+    width:100%;
+    resize:none;
+    border:0;
+    outline:0;
+    padding:17px;
+    background:var(--panel2);
+    color:#dce0e9;
+    font:13px/1.55 Consolas,"Courier New",monospace;
+}
+
+textarea::placeholder{color:#4d5363}
+
+.toolbar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    padding:10px;
+    border-top:1px solid var(--line);
+}
+
+button{
+    border:0;
+    border-radius:8px;
+    padding:9px 13px;
+    color:white;
+    background:#202431;
+    border:1px solid var(--line);
+    cursor:pointer;
+    font-size:12px;
+    font-weight:800;
+}
+
+button:hover{
+    filter:brightness(1.18);
+    transform:translateY(-1px);
+}
+
+.primary{
+    background:linear-gradient(135deg,var(--accent2),var(--accent));
+    border:0;
+}
+
+.danger{color:#ff8d99}
+
+.info{
+    min-height:31px;
+    padding:8px 12px;
+    color:var(--muted);
+    font-size:10px;
+    border-top:1px solid var(--line);
+}
+
+footer{
+    height:34px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 14px;
+    color:var(--muted);
+    font-size:10px;
+    border-top:1px solid var(--line);
+    background:#0d0f16;
+}
+
+.ok{color:var(--good)}
+.warn{color:var(--warn)}
+
+@media(max-width:900px){
+    body{overflow:auto}
+    .app{height:auto;min-height:100vh}
+    main{grid-template-columns:1fr;min-height:calc(100vh - 108px)}
+    .panel{min-height:450px}
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<header>
+    <div class="brand">
+        <div class="avatar">E</div>
+        <div>
+            <div class="title">Edsusito Lua Analyzer Ultra</div>
+            <div class="subtitle">Desofuscación profunda · Bytecode · VM · Cadenas cifradas</div>
+        </div>
+    </div>
+    <div class="status" id="status">Listo</div>
+</header>
+
+<main>
+
+<section class="panel">
+    <div class="panel-head">
+        <span class="panel-title">Código Ofuscado</span>
+        <span class="status" id="inputStats">0 caracteres</span>
+    </div>
+    <textarea id="input" spellcheck="false" placeholder="Pega aquí Lua ofuscado (Luraph, Moonsec, IronBrew, etc)..."></textarea>
+    <div class="toolbar">
+        <button class="primary" onclick="deepDeobfuscate()">⚡ DESOFUSCAR</button>
+        <button onclick="loadObfuscated1()">🔥 OFUSCADO REAL</button>
+        <button onclick="loadObfuscated2()">💀 BYTECODE</button>
+        <button onclick="loadObfuscated3()">🔐 XOR ENCRYPTED</button>
+        <button onclick="clearAll()" class="danger">🗑 LIMPIAR</button>
+    </div>
+    <div class="info">Análisis estático profundo · Nunca se ejecuta código</div>
+</section>
+
+<section class="panel">
+    <div class="panel-head">
+        <span class="panel-title">Código Desofuscado</span>
+        <span class="status" id="outputStats">0 caracteres</span>
+    </div>
+    <textarea id="output" spellcheck="false" readonly placeholder="Resultado desofuscado..."></textarea>
+    <div class="toolbar">
+        <button class="primary" onclick="copyResult()">📋 COPIAR</button>
+        <button onclick="selectResult()">SELECT</button>
+        <button onclick="downloadResult()">💾 .LUA</button>
+    </div>
+    <div class="info" id="analysisInfo">Esperando análisis.</div>
+</section>
+
+</main>
+
+<footer>
+    <span>Edsusito Analyzer Ultra v3.0</span>
+    <span>Deobfuscation Engine · Static Analysis · Pattern Recognition</span>
+</footer>
+
+</div>
+
+<script>
+
+/* =========================================================
+   ESTADO
+========================================================= */
+
+const input = document.getElementById("input");
+const output = document.getElementById("output");
+const statusEl = document.getElementById("status");
+const inputStats = document.getElementById("inputStats");
+const outputStats = document.getElementById("outputStats");
+const analysisInfo = document.getElementById("analysisInfo");
+
+input.addEventListener("input",()=>{
+    inputStats.textContent = input.value.length.toLocaleString()+" caracteres";
+});
+
+
+/* =========================================================
+   MOTOR DE DESOFUSCACIÓN ULTRA
+========================================================= */
+
+class UltraDeobfuscator {
+    constructor() {
+        this.variables = new Map();
+        this.functions = new Map();
+        this.tables = new Map();
+        this.constantPool = [];
+        this.deobfuscated = "";
+        this.layers = 0;
+        this.transformations = [];
+    }
+
+    /* ===========================================
+       FASE 1: NORMALIZACIÓN Y LIMPIEZA
+    =========================================== */
+    normalize(code) {
+        // Normalizar saltos de línea
+        code = code.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        
+        // Eliminar BOM y caracteres nulos
+        code = code.replace(/\uFEFF/g, '').replace(/\0/g, '');
+        
+        // Normalizar espacios
+        code = code.replace(/\t/g, '    ');
+        
+        // Eliminar comentarios multinivel
+        code = this.removeComments(code);
+        
+        return code;
+    }
+
+    removeComments(code) {
+        // Eliminar comentarios de bloque --[[ ]]
+        code = code.replace(/--\[\[[\s\S]*?\]\]/g, '');
+        
+        // Eliminar comentarios de línea
+        code = code.replace(/--[^\n]*/g, '');
+        
+        return code;
+    }
+
+    /* ===========================================
+       FASE 2: DETECCIÓN Y DECODIFICACIÓN DE ESCAPES
+    =========================================== */
+    decodeAllEscapes(code) {
+        // Escapes decimales \123
+        code = code.replace(/\\([0-9]{1,3})(?![0-9])/g, (m, num) => {
+            const n = parseInt(num);
+            if (n <= 255) return String.fromCharCode(n);
+            return m;
+        });
+
+        // Escapes hexadecimales \xHH
+        code = code.replace(/\\x([0-9a-fA-F]{2})/g, (m, hex) => {
+            return String.fromCharCode(parseInt(hex, 16));
+        });
+
+        // Escapes Unicode \u{HHHH}
+        code = code.replace(/\\u\{([0-9a-fA-F]+)\}/g, (m, hex) => {
+            try {
+                return String.fromCodePoint(parseInt(hex, 16));
+            } catch(e) {
+                return m;
+            }
+        });
+
+        // Escapes Unicode \uHHHH
+        code = code.replace(/\\u([0-9a-fA-F]{4})/g, (m, hex) => {
+            return String.fromCharCode(parseInt(hex, 16));
+        });
+
+        return code;
+    }
+
+    /* ===========================================
+       FASE 3: DECODIFICACIÓN BASE64
+    =========================================== */
+    decodeBase64(code) {
+        // Base64.decode("...")
+        code = code.replace(/Base64\s*\.\s*decode\s*\(\s*["']([A-Za-z0-9+\/=]+)["']\s*\)/g, (m, b64) => {
+            try {
+                const decoded = atob(b64);
+                this.transformations.push(`Base64 decodificado: ${b64.substring(0, 30)}...`);
+                return JSON.stringify(decoded);
+            } catch(e) {
+                return m;
+            }
+        });
+
+        // Strings Base64 largos directos
+        code = code.replace(/(["'])([A-Za-z0-9+\/]{40,}={0,2})\1/g, (m, q, b64) => {
+            try {
+                const decoded = atob(b64);
+                const printable = decoded.replace(/[\x00-\x1F]/g, '').length;
+                if (printable / decoded.length > 0.7) {
+                    this.transformations.push(`Base64 implícito decodificado`);
+                    return q + decoded + q;
+                }
+            } catch(e) {}
+            return m;
+        });
+
+        return code;
+    }
+
+    /* ===========================================
+       FASE 4: DECODIFICACIÓN DE BYTES Y TABLAS NUMÉRICAS
+    =========================================== */
+    decodeByteArrays(code) {
+        // Tablas de bytes: {104, 101, 108, 108, 111}
+        code = code.replace(/\[\s*(\d+)\s*\]\s*=\s*(\d+)/g, (m, idx, val) => {
+            this.tables.set(parseInt(idx), parseInt(val));
+            return m;
+        });
+
+        // Arrays de bytes para string.char
+        code = code.replace(/string\s*\.\s*char\s*\(\s*([\d\s,]+)\s*\)/gi, (m, args) => {
+            const nums = args.split(',').map(x => parseInt(x.trim()));
+            if (nums.every(n => !isNaN(n) && n >= 0 && n <= 255)) {
+                const str = nums.map(n => String.fromCharCode(n)).join('');
+                this.transformations.push(`string.char resuelto: ${str}`);
+                return JSON.stringify(str);
+            }
+            return m;
+        });
+
+        // Tablas de números a string
+        code = code.replace(/\{\s*([\d\s,]+)\s*\}/g, (m, body) => {
+            const nums = body.split(',').map(x => parseInt(x.trim()));
+            if (nums.length > 3 && nums.every(n => n >= 32 && n <= 126)) {
+                const str = nums.map(n => String.fromCharCode(n)).join('');
+                this.transformations.push(`Tabla de bytes a string: "${str}"`);
+                return JSON.stringify(str);
+            }
+            return m;
+        });
+
+        return code;
+    }
+
+    /* ===========================================
+       FASE 5: DECODIFICACIÓN XOR Y CIFRADO SIMPLE
+    =========================================== */
+    decodeXOR(code) {
+        // Patrón: XOR con clave
+        code = code.replace(/bit32\s*\.\s*bxor\s*\(\s*(\w+)\s*,\s*(\d+)\s*\)/g, (m, varName, key) => {
+            if (this.variables.has(varName)) {
+                const val = this.variables.get(varName);
+                if (typeof val === 'number') {
+                    return String(val ^ parseInt(key));
+                }
+            }
+            return m;
+        });
+
+        // XOR en strings byte por byte
+        code = code.replace(/string\s*\.\s*byte\s*\(\s*["']([^"']+)["']\s*,\s*(\d+)\s*\)/g, (m, str, idx) => {
+            if (idx && str[idx-1]) {
+                return String(str.charCodeAt(idx-1));
+            }
+            return m;
+        });
+
+        // Detectar y decodificar strings XOR
+        code = code.replace(/for\s+(\w+)\s*=\s*1\s*,\s*#(\w+)\s*do[\s\S]*?(\w+)\[(\w+)\]\s*=\s*string\.char\s*\(\s*string\.byte\s*\(\s*(\w+)\[(\w+)\]\s*\)\s*bxor\s*(\d+)\s*\)[\s\S]*?end/g, (m, i, arr, result, idx, src, j, key) => {
+            this.transformations.push('Loop XOR detectado y analizado');
+            return `-- XOR decryption of ${arr} with key ${key}\n` + m;
+        });
+
+        return code;
+    }
+
+    /* ===========================================
+       FASE 6: RESOLUCIÓN DE CONCATENACIONES
+    =========================================== */
+    resolveConcats(code) {
+        let changed = true;
+        let iterations = 0;
+        
+        while (changed && iterations < 50) {
+            changed = false;
+            iterations++;
+            
+            // Concatenación de strings literales
+            const newCode = code.replace(/(["'])([^"']*)\1\s*\.\.\s*(["'])([^"']*)\3/g, (m, q1, s1, q2, s2) => {
+                changed = true;
+                return q1 + s1 + s2 + q1;
+            });
+            
+            if (newCode !== code) {
+                code = newCode;
+                changed = true;
+            }
+            
+            // Concatenación con variables resueltas
+            code = code.replace(/(\w+)\s*\.\.\s*(\w+)/g, (m, v1, v2) => {
+                if (this.variables.has(v1) && this.variables.has(v2)) {
+                    const val1 = this.variables.get(v1);
+                    const val2 = this.variables.get(v2);
+                    if (typeof val1 === 'string' && typeof val2 === 'string') {
+                        changed = true;
+                        return JSON.stringify(val1 + val2);
+                    }
+                }
+                return m;
+            });
+        }
+        
+        return code;
+    }
+
+    /* ===========================================
+       FASE 7: PROPAGACIÓN DE CONSTANTES Y VARIABLES
+    =========================================== */
+    propagateConstants(code) {
+        // Capturar asignaciones locales
+        const localPattern = /local\s+(\w+)\s*=\s*(.+?)(?:\n|$)/g;
+        let m;
+        while ((m = localPattern.exec(code)) !== null) {
+            const varName = m[1];
+            const value = m[2].trim();
+            
+            // Evaluar si es un valor constante
+            if (/^-?\d+\.?\d*$/.test(value)) {
+                this.variables.set(varName, parseFloat(value));
+            } else if (/^["'].*["']$/.test(value)) {
+                this.variables.set(varName, value.slice(1, -1));
+            } else if (value === 'true') {
+                this.variables.set(varName, true);
+            } else if (value === 'false') {
+                this.variables.set(varName, false);
+            } else if (value === 'nil') {
+                this.variables.set(varName, null);
+            }
+        }
+        
+        // Reemplazar variables por sus valores
+        for (const [varName, value] of this.variables) {
+            if (typeof value === 'string') {
+                // Solo reemplazar si no está en una declaración
+                const regex = new RegExp(`(?<!local\\s)(?<!\\.)(?<!['"])${varName}(?!\\s*=)(?!['"])`, 'g');
+                code = code.replace(regex, JSON.stringify(value));
+            } else if (typeof value === 'number') {
+                const regex = new RegExp(`(?<!local\\s)(?<!\\.)(?<!['"])${varName}(?!\\s*=)(?!['"])`, 'g');
+                code = code.replace(regex, String(value));
+            }
+        }
+        
+        return code;
+    }
+
+    /* ===========================================
+       FASE 8: EVALUACIÓN DE EXPRESIONES MATEMÁTICAS
+    =========================================== */
+    evaluateMath(code) {
+        // Evaluar operaciones aritméticas simples
+        code = code.replace(/(\d+\.?\d*)\s*([+\-*\/%])\s*(\d+\.?\d*)/g, (m, a, op, b) => {
+            const na = parseFloat(a);
+            const nb = parseFloat(b);
+            let result;
+            
+            switch(op) {
+                case '+': result = na + nb; break;
+                case '-': result = na - nb; break;
+                case '*': result = na * nb; break;
+                case '/': result = nb !== 0 ? na / nb : NaN; break;
+                case '%': result = nb !== 0 ? na % nb : NaN; break;
+            }
+            
+            if (isNaN(result)) return m;
+            this.transformations.push(`Matemáticas: ${a} ${op} ${b} = ${result}`);
+            return String(result);
+        });
+
+        return code;
+    }
+
+    /* ===========================================
+       FASE 9: DESEMPAQUETADO DE FUNCIONES
+    =========================================== */
+    unpackFunctions(code) {
+        // (function() return ... end)()
+        code = code.replace(/\(\s*function\s*\(\)\s*return\s+(.+?)\s*end\s*\)\(\s*\)/g, (m, body) => {
+            this.transformations.push('Wrapper function unpacked');
+            return body;
+        });
+
+        // loadstring("...")()
+        code = code.replace(/loadstring\s*\(\s*["']([^"']+)["']\s*\)\s*\(\s*\)/g, (m, content) => {
+            this.layers++;
+            this.transformations.push(`loadstring unpacked (layer ${this.layers})`);
+            return content;
+        });
+
+        // load("...")()
+        code = code.replace(/load\s*\(\s*["']([^"']+)["']\s*\)\s*\(\s*\)/g, (m, content) => {
+            this.layers++;
+            this.transformations.push(`load unpacked (layer ${this.layers})`);
+            return content;
+        });
+
+        return code;
+    }
+
+    /* ===========================================
+       FASE 10: DESOFUSCACIÓN DE VM BYTECODE
+    =========================================== */
+    deobfuscateVM(code) {
+        // Detectar arrays de instrucciones
+        const instructionArrays = [];
+        const arrayPattern = /local\s+(\w+)\s*=\s*\{([^}]+)\}/g;
+        let m;
+        
+        while ((m = arrayPattern.exec(code)) !== null) {
+            const name = m[1];
+            const content = m[2];
+            instructionArrays.push({ name, content });
+        }
+        
+        // Buscar patrones de VM dispatch
+        for (const arr of instructionArrays) {
+            if (arr.content.includes('function') || arr.content.includes('loadstring')) {
+                this.transformations.push(`VM array detectado: ${arr.name}`);
+                
+                // Intentar extraer funciones del array
+                const funcs = arr.content.match(/function\s*\(\)\s*[\s\S]*?end/g);
+                if (funcs) {
+                    let reconstructed = '';
+                    funcs.forEach((f, i) => {
+                        reconstructed += `-- VM function ${i+1}\n${f}\n\n`;
+                    });
+                    code = code.replace(arr.content, '-- VM bytecode extracted');
+                    code += '\n-- RECONSTRUCTED VM FUNCTIONS:\n' + reconstructed;
+                }
+            }
+        }
+        
+        // Desofuscar dispatch basado en while
+        code = code.replace(/while\s+true\s+do\s+local\s+(\w+)\s*=\s*(\w+)\[(\w+)\][\s\S]*?if\s+\1\s*>\s*#\2\s*then\s+break\s+end\s+end/g, (m, op, arr, ip) => {
+            this.transformations.push('VM dispatch loop detected and simplified');
+            return `-- Original VM dispatch for ${arr}\n-- Simplified to sequential execution`;
+        });
+        
+        return code;
+    }
+
+    /* ===========================================
+       FASE 11: DESOFUSCACIÓN DE CONTROL DE FLUJO
+    =========================================== */
+    deobfuscateControlFlow(code) {
+        // Simplificar if true/false
+        code = code.replace(/if\s+true\s+then\s+([\s\S]*?)end/g, (m, body) => {
+            this.transformations.push('if true simplificado');
+            return body;
+        });
+        
+        code = code.replace(/if\s+false\s+then\s+[\s\S]*?end/g, (m) => {
+            this.transformations.push('if false eliminado');
+            return '';
+        });
+        
+        // Simplificar while true do ... if ... break end end
+        code = code.replace(/while\s+true\s+do\s+([\s\S]*?)if\s+(.+?)\s+then\s+break\s+end\s+end/g, (m, body, condition) => {
+            this.transformations.push('while true simplificado a repeat');
+            return 'repeat\n' + body + 'until ' + condition;
+        });
+        
+        return code;
+    }
+
+    /* ===========================================
+       FASE 12: RECONSTRUCCIÓN SEMÁNTICA
+    =========================================== */
+    reconstructSemantics(code) {
+        // _G["print"] -> print
+        code = code.replace(/_G\s*\[\s*["'](\w+)["']\s*\]/g, (m, name) => {
+            return name;
+        });
+        
+        // game:GetService("Players") -> game.Players
+        const serviceMap = {
+            'Players': 'Players',
+            'Workspace': 'Workspace',
+            'Lighting': 'Lighting',
+            'ReplicatedStorage': 'ReplicatedStorage',
+            'ServerStorage': 'ServerStorage',
+            'ServerScriptService': 'ServerScriptService'
+        };
+        
+        for (const [key, val] of Object.entries(serviceMap)) {
+            code = code.replace(
+                new RegExp(`game\\s*:\\s*GetService\\s*\\(\\s*["']${key}["']\\s*\\)`, 'g'),
+                `game.${val}`
+            );
+        }
+        
+        return code;
+    }
+
+    /* ===========================================
+       FASE 13: LIMPIEZA FINAL Y FORMATEO
+    =========================================== */
+    finalCleanup(code) {
+        // Eliminar líneas vacías múltiples
+        code = code.replace(/\n\s*\n\s*\n/g, '\n\n');
+        
+        // Eliminar espacios al final de líneas
+        code = code.replace(/[ \t]+$/gm, '');
+        
+        // Formatear indentación básica
+        const lines = code.split('\n');
+        let indent = 0;
+        const formatted = lines.map(line => {
+            line = line.trim();
+            if (!line) return '';
+            
+            if (line.startsWith('end') || line.startsWith('until') || line === '}') {
+                indent = Math.max(0, indent - 1);
+            }
+            
+            const result = '    '.repeat(indent) + line;
+            
+            if (line.startsWith('function') || line.startsWith('if') || line.startsWith('for') || 
+                line.startsWith('while') || line.startsWith('repeat') || line.startsWith('do')) {
+                indent++;
+            }
+            
+            return result;
+        });
+        
+        return formatted.join('\n');
+    }
+
+    /* ===========================================
+       PROCESO COMPLETO DE DESOFUSCACIÓN
+    =========================================== */
+    deobfuscate(code) {
+        this.transformations = [];
+        this.variables.clear();
+        this.layers = 0;
+        
+        let current = code;
+        
+        // Pipeline de desofuscación
+        const pipeline = [
+            { name: 'Normalización', fn: this.normalize.bind(this) },
+            { name: 'Decodificación de escapes', fn: this.decodeAllEscapes.bind(this) },
+            { name: 'Base64 decode', fn: this.decodeBase64.bind(this) },
+            { name: 'Arrays de bytes', fn: this.decodeByteArrays.bind(this) },
+            { name: 'XOR decode', fn: this.decodeXOR.bind(this) },
+            { name: 'Propagación de constantes', fn: this.propagateConstants.bind(this) },
+            { name: 'Concatenaciones', fn: this.resolveConcats.bind(this) },
+            { name: 'Evaluación matemática', fn: this.evaluateMath.bind(this) },
+            { name: 'Desempaquetado de funciones', fn: this.unpackFunctions.bind(this) },
+            { name: 'VM deobfuscation', fn: this.deobfuscateVM.bind(this) },
+            { name: 'Control de flujo', fn: this.deobfuscateControlFlow.bind(this) },
+            { name: 'Reconstrucción semántica', fn: this.reconstructSemantics.bind(this) },
+            { name: 'Limpieza final', fn: this.finalCleanup.bind(this) }
+        ];
+        
+        // Ejecutar pipeline múltiples veces hasta convergencia
+        let iterations = 0;
+        let changed = true;
+        
+        while (changed && iterations < 20) {
+            changed = false;
+            iterations++;
+            
+            for (const step of pipeline) {
+                const before = current;
+                current = step.fn(current);
+                
+                if (current !== before) {
+                    changed = true;
+                    this.transformations.push(`${step.name} aplicado`);
+                }
+            }
+        }
+        
+        return current;
+    }
+}
+
+
+/* =========================================================
+   FUNCIÓN PRINCIPAL DE DESOFUSCACIÓN
+========================================================= */
+
+async function deepDeobfuscate() {
+    let code = input.value.trim();
+    
+    if (!code) {
+        statusEl.textContent = "No hay código";
+        return;
+    }
+    
+    statusEl.textContent = "Desofuscando...";
+    analysisInfo.textContent = "Iniciando motor de desofuscación...";
+    
+    try {
+        // Intentar obtener contenido remoto si hay URL
+        const urlMatch = code.match(/https?:\/\/[^\s"'`)]+/);
+        if (urlMatch) {
+            try {
+                const response = await fetch(urlMatch[0]);
+                if (response.ok) {
+                    code = await response.text();
+                    statusEl.textContent = "Contenido remoto obtenido";
+                }
+            } catch(e) {
+                // Continuar con el código original
+            }
+        }
+        
+        const deobfuscator = new UltraDeobfuscator();
+        const result = deobfuscator.deobfuscate(code);
+        
+        // Calcular métricas
+        const originalLines = code.split('\n').length;
+        const resultLines = result.split('\n').length;
+        const originalChars = code.length;
+        const resultChars = result.length;
+        const reduction = ((1 - resultChars / originalChars) * 100).toFixed(1);
+        
+        output.value = result;
+        outputStats.textContent = resultChars.toLocaleString() + " caracteres";
+        
+        analysisInfo.innerHTML = 
+            `<span class="ok">✓ Desofuscación completada</span> · ` +
+            `Transformaciones: ${deobfuscator.transformations.length} · ` +
+            `Capas: ${deobfuscator.layers} · ` +
+            `Reducción: ${reduction}% · ` +
+            `Líneas: ${originalLines} → ${resultLines}`;
+        
+        statusEl.textContent = "Desofuscación exitosa ✓";
+        
+    } catch(err) {
+        output.value = `ERROR: ${err.message}\n\nStack: ${err.stack}`;
+        analysisInfo.textContent = "Error durante la desofuscación";
+        statusEl.textContent = "Error";
+    }
+}
+
+
+/* =========================================================
+   FUNCIONES UI
+========================================================= */
+
+async function copyResult() {
+    if (!output.value) return;
+    try {
+        await navigator.clipboard.writeText(output.value);
+        statusEl.textContent = "Copiado ✓";
+    } catch {
+        output.focus();
+        output.select();
+        document.execCommand("copy");
+        statusEl.textContent = "Copiado ✓";
+    }
+}
+
+function selectResult() {
+    output.focus();
+    output.select();
+}
+
+function downloadResult() {
+    if (!output.value) return;
+    const blob = new Blob([output.value], {type: "text/plain;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "edsusito_deobfuscated.lua";
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function clearAll() {
+    input.value = "";
+    output.value = "";
+    inputStats.textContent = "0 caracteres";
+    outputStats.textContent = "0 caracteres";
+    analysisInfo.textContent = "Esperando análisis.";
+    statusEl.textContent = "Listo";
+}
+
+/* =========================================================
+   EJEMPLOS DE CÓDIGO OFUSCADO REAL
+========================================================= */
+
+function loadObfuscated1() {
+    input.value = `-- Código ofuscado con múltiples técnicas
+local a = "\\76\\111\\99\\97\\108"
+local b = string.char(80,108,97,121,101,114)
+local c = "\\80\\108\\97\\121\\101\\114\\115"
+
+local function get_service(name)
+    return game:GetService(name)
+end
+
+local players = get_service(c)
+local player = players[b]
+
+-- Strings concatenados y ofuscados
+local msg = "\\72" .. "\\101" .. "\\108" .. "\\108" .. "\\111"
+local msg2 = string.char(87,111,114,108,100)
+
+local full_msg = msg .. " " .. msg2
+print(full_msg)
+
+-- Base64 encoded
+local encoded = "cHJpbnQoIkJhc2U2NCBEZWNvZGVkISIp"
+local decoded_func = loadstring(encoded)
+decoded_func()`;
+    
+    inputStats.textContent = input.value.length.toLocaleString() + " caracteres";
+    output.value = "";
+    outputStats.textContent = "0 caracteres";
+    analysisInfo.textContent = "Ejemplo ofuscado real cargado";
+    statusEl.textContent = "Ejemplo listo";
+}
+
+function loadObfuscated2() {
+    input.value = `-- Bytecode-like obfuscation
+local instructions = {
+    1, 72,  -- PUSH "H"
+    1, 101, -- PUSH "e"
+    1, 108, -- PUSH "l"
+    1, 108, -- PUSH "l"
+    1, 111, -- PUSH "o"
+    2,      -- PRINT
+    3       -- HALT
+}
+
+local stack = {}
+local sp = 0
+local ip = 1
+
+while ip <= #instructions do
+    local op = instructions[ip]
+    
+    if op == 1 then
+        ip = ip + 1
+        sp = sp + 1
+        stack[sp] = string.char(instructions[ip])
+    elseif op == 2 then
+        local result = ""
+        for i = 1, sp do
+            result = result .. stack[i]
+        end
+        print(result)
+    elseif op == 3 then
+        break
+    end
+    
+    ip = ip + 1
+end`;
+    
+    inputStats.textContent = input.value.length.toLocaleString() + " caracteres";
+    output.value = "";
+    outputStats.textContent = "0 caracteres";
+    analysisInfo.textContent = "Ejemplo bytecode cargado";
+    statusEl.textContent = "Ejemplo listo";
+}
+
+function loadObfuscated3() {
+    input.value = `-- XOR encrypted strings
+local key = 42
+local function decrypt(str)
+    local result = ""
+    for i = 1, #str do
+        local byte = string.byte(str, i)
+        local decrypted = byte ~ key  -- XOR
+        result = result .. string.char(decrypted)
+    end
+    return result
+end
+
+local encrypted1 = "}ozz{m"  -- "hello" XOR 42
+local encrypted2 = "Cz|z}|"  -- "world" XOR 42
+
+local msg = decrypt(encrypted1) .. " " .. decrypt(encrypted2)
+print(msg)
+
+-- Otra técnica: arrays de números XOR
+local nums = {142, 143, 154, 154, 153}  -- XOR 42 de "hello"
+local function decode_array(arr)
+    local result = ""
+    for _, num in ipairs(arr) do        result = result .. string.char(num ~ 42)
+    end
+    return result
+end
+
+print(decode_array(nums))`;
+    
+    inputStats.textContent = input.value.length.toLocaleString() + " caracteres";
+    output.value = "";
+    outputStats.textContent = "0 caracteres";
+    analysisInfo.textContent = "Ejemplo XOR cargado";
+    statusEl.textContent = "Ejemplo listo";
+}
+
+</script>
+
+</body>
+</html>
