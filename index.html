@@ -2,186 +2,202 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Edsusito Lua Deobfuscator</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Edsusito Lua Analyzer</title>
 
 <style>
-* {
-    box-sizing: border-box;
+:root{
+    --bg:#090a10;
+    --panel:#10121a;
+    --panel2:#0c0e15;
+    --line:#272b38;
+    --text:#eef1f7;
+    --muted:#8b91a3;
+    --accent:#a78bfa;
+    --accent2:#7c3aed;
+    --good:#55d187;
+    --warn:#eabf55;
+    --bad:#ef6675;
 }
 
-body {
-    margin: 0;
-    height: 100vh;
-    background: #0b0f14;
-    color: #e6edf3;
-    font-family: "Segoe UI", Arial, sans-serif;
+*{box-sizing:border-box}
+
+body{
+    margin:0;
+    height:100vh;
+    overflow:hidden;
+    background:
+        radial-gradient(circle at 15% 0%,#21143d 0,transparent 32%),
+        radial-gradient(circle at 90% 100%,#151a35 0,transparent 35%),
+        var(--bg);
+    color:var(--text);
+    font-family:Segoe UI,Arial,sans-serif;
 }
 
-.app {
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
+.app{
+    height:100vh;
+    display:flex;
+    flex-direction:column;
 }
 
-header {
-    height: 70px;
-    padding: 0 24px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: #11161d;
-    border-bottom: 1px solid #30363d;
+header{
+    height:74px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 22px;
+    background:rgba(16,18,26,.92);
+    border-bottom:1px solid var(--line);
+    backdrop-filter:blur(14px);
 }
 
-.brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+.brand{
+    display:flex;
+    align-items:center;
+    gap:12px;
 }
 
-.logo {
-    width: 42px;
-    height: 42px;
-    border-radius: 11px;
-    background: #238636;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 800;
+.avatar{
+    width:45px;
+    height:45px;
+    border-radius:13px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:
+        linear-gradient(135deg,var(--accent2),#20243b);
+    border:1px solid #59418c;
+    box-shadow:0 0 25px #7c3aed33;
+    font-weight:900;
+    font-size:18px;
 }
 
-.title {
-    font-size: 18px;
-    font-weight: 700;
+.title{
+    font-size:18px;
+    font-weight:800;
 }
 
-.subtitle {
-    font-size: 12px;
-    color: #8b949e;
+.subtitle{
+    color:var(--muted);
+    font-size:11px;
+    margin-top:2px;
 }
 
-.status {
-    color: #8b949e;
-    font-size: 12px;
+.status{
+    color:var(--muted);
+    font-size:12px;
 }
 
-main {
-    flex: 1;
-    min-height: 0;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-    padding: 14px;
+main{
+    flex:1;
+    min-height:0;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+    padding:14px;
 }
 
-.panel {
-    min-width: 0;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    background: #11161d;
-    border: 1px solid #30363d;
-    border-radius: 12px;
-    overflow: hidden;
+.panel{
+    min-width:0;
+    min-height:0;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    border:1px solid var(--line);
+    border-radius:15px;
+    background:rgba(16,18,26,.94);
+    box-shadow:0 15px 45px #0005;
 }
 
-.panel-head {
-    height: 48px;
-    padding: 0 15px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid #30363d;
+.panel-head{
+    height:52px;
+    padding:0 15px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    border-bottom:1px solid var(--line);
 }
 
-.panel-title {
-    font-weight: 700;
-    font-size: 14px;
+.panel-title{
+    font-size:13px;
+    font-weight:800;
 }
 
-textarea {
-    flex: 1;
-    width: 100%;
-    min-height: 0;
-    resize: none;
-    border: 0;
-    outline: none;
-    background: #0b0f14;
-    color: #c9d1d9;
-    padding: 17px;
-    font-family: Consolas, "Courier New", monospace;
-    font-size: 13px;
-    line-height: 1.55;
+textarea{
+    flex:1;
+    min-height:0;
+    width:100%;
+    resize:none;
+    border:0;
+    outline:0;
+    padding:17px;
+    background:var(--panel2);
+    color:#dce0e9;
+    font:13px/1.55 Consolas,"Courier New",monospace;
 }
 
-textarea::placeholder {
-    color: #484f58;
+textarea::placeholder{color:#4d5363}
+
+.toolbar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    padding:10px;
+    border-top:1px solid var(--line);
 }
 
-textarea[readonly] {
-    color: #d2d8de;
+button{
+    border:0;
+    border-radius:8px;
+    padding:9px 13px;
+    color:white;
+    background:#202431;
+    border:1px solid var(--line);
+    cursor:pointer;
+    font-size:12px;
+    font-weight:800;
 }
 
-.toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    padding: 11px;
-    border-top: 1px solid #30363d;
+button:hover{
+    filter:brightness(1.18);
+    transform:translateY(-1px);
 }
 
-button {
-    border: 0;
-    border-radius: 7px;
-    padding: 9px 14px;
-    cursor: pointer;
-    font-weight: 700;
-    font-size: 12px;
+.primary{
+    background:linear-gradient(135deg,var(--accent2),var(--accent));
+    border:0;
 }
 
-button:hover {
-    filter: brightness(1.12);
+.danger{color:#ff8d99}
+
+.info{
+    min-height:31px;
+    padding:8px 12px;
+    color:var(--muted);
+    font-size:10px;
+    border-top:1px solid var(--line);
 }
 
-.primary {
-    background: #238636;
-    color: white;
+footer{
+    height:34px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 14px;
+    color:var(--muted);
+    font-size:10px;
+    border-top:1px solid var(--line);
+    background:#0d0f16;
 }
 
-.secondary {
-    background: #21262d;
-    color: #c9d1d9;
-    border: 1px solid #30363d;
-}
+.ok{color:var(--good)}
+.warn{color:var(--warn)}
 
-.danger {
-    background: #8b1e2d;
-    color: white;
-}
-
-.info {
-    padding: 10px 15px;
-    font-size: 11px;
-    color: #8b949e;
-    border-top: 1px solid #30363d;
-}
-
-footer {
-    height: 35px;
-    display: flex;
-    align-items: center;
-    padding: 0 15px;
-    background: #11161d;
-    border-top: 1px solid #30363d;
-    color: #8b949e;
-    font-size: 11px;
-}
-
-@media (max-width: 900px) {
-    main {
-        grid-template-columns: 1fr;
-    }
+@media(max-width:900px){
+    body{overflow:auto}
+    .app{height:auto;min-height:100vh}
+    main{grid-template-columns:1fr;min-height:calc(100vh - 108px)}
+    .panel{min-height:450px}
 }
 </style>
 </head>
@@ -192,172 +208,141 @@ footer {
 
 <header>
     <div class="brand">
-        <div class="logo">E</div>
-
+        <div class="avatar">E</div>
         <div>
-            <div class="title">Edsusito Lua Deobfuscator</div>
+            <div class="title">Edsusito Lua Analyzer</div>
             <div class="subtitle">
-                Análisis estático · no ejecuta Lua
+                Análisis multicapa · estático · sin ejecución
             </div>
         </div>
     </div>
 
-    <div class="status" id="status">
-        Listo
-    </div>
+    <div class="status" id="status">Listo</div>
 </header>
-
 
 <main>
 
 <section class="panel">
 
     <div class="panel-head">
-        <span class="panel-title">
-            Código / Loadstring
-        </span>
-
-        <span class="status" id="inputStats">
-            0 caracteres
-        </span>
+        <span class="panel-title">Código / Loadstring / URL</span>
+        <span class="status" id="inputStats">0 caracteres</span>
     </div>
 
-    <textarea
-        id="input"
+    <textarea id="input"
         spellcheck="false"
-        placeholder="Pega aquí código Lua o un loadstring(...)..."
-    ></textarea>
+        placeholder="Pega aquí Lua, un loadstring, una URL o código ofuscado..."></textarea>
 
     <div class="toolbar">
-
-        <button
-            class="primary"
-            onclick="analyzeAndDeobfuscate()">
-            ⚡ DESOFUSCAR
-        </button>
-
-        <button
-            class="secondary"
-            onclick="loadExample()">
-            EJEMPLO
-        </button>
-
-        <button
-            class="danger"
-            onclick="clearAll()">
-            LIMPIAR
-        </button>
-
+        <button class="primary" onclick="analyze()">⚡ DESOFUSCAR</button>
+        <button onclick="loadExample()">🧪 EJEMPLO</button>
+        <button onclick="clearAll()" class="danger">🗑 LIMPIAR</button>
     </div>
 
     <div class="info">
-        Las URLs se leen como texto. El contenido remoto nunca se ejecuta.
+        El código se analiza como texto. Nunca se ejecuta.
     </div>
 
 </section>
 
-
 <section class="panel">
 
     <div class="panel-head">
-
-        <span class="panel-title">
-            Resultado
-        </span>
-
-        <span class="status" id="outputStats">
-            0 caracteres
-        </span>
-
+        <span class="panel-title">Resultado</span>
+        <span class="status" id="outputStats">0 caracteres</span>
     </div>
 
-    <textarea
-        id="output"
+    <textarea id="output"
         spellcheck="false"
         readonly
-        placeholder="Aquí aparecerá el código analizado..."
-    ></textarea>
+        placeholder="Aquí aparecerá el resultado..."></textarea>
 
     <div class="toolbar">
-
-        <button
-            class="primary"
-            onclick="copyResult()">
-            📋 COPIAR
-        </button>
-
-        <button
-            class="secondary"
-            onclick="selectResult()">
-            SELECCIONAR
-        </button>
-
+        <button class="primary" onclick="copyResult()">📋 COPIAR</button>
+        <button onclick="selectResult()">SELECT</button>
+        <button onclick="downloadResult()">💾 .LUA</button>
     </div>
 
     <div class="info" id="analysisInfo">
-        Sin análisis todavía.
+        Esperando análisis.
     </div>
 
 </section>
 
 </main>
 
-
 <footer>
-    Análisis local · máximo 20 pasadas · sin ejecución de código
+    <span>Edsusito Analyzer</span>
+    <span>Máximo 25 ciclos · análisis estático</span>
 </footer>
 
 </div>
 
-
 <script>
 
 /* =========================================================
-   ELEMENTOS
+   ESTADO
 ========================================================= */
 
 const input = document.getElementById("input");
 const output = document.getElementById("output");
 const statusEl = document.getElementById("status");
 
-input.addEventListener("input", updateInputStats);
+input.addEventListener("input",()=>{
+    inputStats.textContent =
+        input.value.length.toLocaleString()+" caracteres";
+});
 
 
 /* =========================================================
-   ESTADÍSTICAS
+   UTILIDADES
 ========================================================= */
 
-function updateInputStats() {
+function normalize(s){
+    return s
+        .replace(/\r\n/g,"\n")
+        .replace(/\r/g,"\n")
+        .replace(/\uFEFF/g,"");
+}
 
-    const text = input.value;
-
-    document.getElementById("inputStats").textContent =
-        `${text.length.toLocaleString()} caracteres`;
+function count(re,s){
+    return (s.match(re)||[]).length;
 }
 
 
 /* =========================================================
-   EXTRAER URL DE HttpGet
+   DETECCIÓN DE URL
 ========================================================= */
 
-function extractHttpGetUrl(text) {
+function extractUrls(s){
 
-    const patterns = [
+    const found=[];
+    const re=/https?:\/\/[^\s"'`)]+/gi;
+    let m;
 
-        /game\s*:\s*HttpGet\s*\(\s*["']([^"']+)["']\s*\)/i,
+    while((m=re.exec(s))!==null){
+        if(!found.includes(m[0]))
+            found.push(m[0]);
+    }
 
-        /HttpGet\s*\(\s*["']([^"']+)["']\s*\)/i,
+    return found;
+}
 
-        /loadstring\s*\(\s*game\s*:\s*HttpGet\s*\(\s*["']([^"']+)["']/i
+function extractHttpGet(s){
 
+    const patterns=[
+        /(?:game\s*:\s*)?HttpGet\s*\(\s*["']([^"']+)["']/i,
+        /HttpGet\s*\(\s*([^)]+)\)/i
     ];
 
-    for (const regex of patterns) {
+    for(const re of patterns){
 
-        const match = text.match(regex);
+        const m=s.match(re);
 
-        if (match && match[1]) {
-            return match[1];
+        if(m && m[1] &&
+           /^https?:\/\//i.test(m[1])){
+
+            return m[1];
         }
     }
 
@@ -366,126 +351,66 @@ function extractHttpGetUrl(text) {
 
 
 /* =========================================================
-   DECODIFICAR URL
+   DECODIFICACIÓN DE ESCAPES
 ========================================================= */
 
-function decodeUrl(url) {
+function numericEscapes(s){
 
-    try {
-        return decodeURIComponent(url);
-    } catch {
-        return url;
-    }
-}
-
-
-/* =========================================================
-   OBTENER TEXTO REMOTO
-========================================================= */
-
-async function fetchRemoteText(url) {
-
-    statusEl.textContent = "Leyendo contenido remoto...";
-
-    const response = await fetch(url, {
-        method: "GET"
-    });
-
-    if (!response.ok) {
-
-        throw new Error(
-            `HTTP ${response.status} ${response.statusText}`
-        );
-    }
-
-    return await response.text();
-}
-
-
-/* =========================================================
-   ESCAPES NUMÉRICOS LUA
-
-   \104\111\108\97
-   -> hola
-========================================================= */
-
-function decodeNumericEscapes(text) {
-
-    return text.replace(
+    return s.replace(
         /\\([0-9]{1,3})/g,
-        function(match, number) {
-
-            const value = Number(number);
-
-            if (
-                Number.isInteger(value) &&
-                value >= 0 &&
-                value <= 255
-            ) {
-                return String.fromCharCode(value);
-            }
-
-            return match;
+        (m,n)=>{
+            const x=Number(n);
+            return x<=255
+                ? String.fromCharCode(x)
+                : m;
         }
     );
 }
 
+function hexEscapes(s){
 
-/* =========================================================
-   ESCAPES HEX
-
-   \x68\x6f\x6c\x61
-   -> hola
-========================================================= */
-
-function decodeHexEscapes(text) {
-
-    return text.replace(
+    return s.replace(
         /\\x([0-9a-fA-F]{2})/g,
-        function(match, hex) {
+        (m,h)=>String.fromCharCode(parseInt(h,16))
+    );
+}
 
-            return String.fromCharCode(
-                parseInt(hex, 16)
-            );
+function unicodeEscapes(s){
+
+    return s.replace(
+        /\\u\{([0-9a-fA-F]+)\}/g,
+        (m,h)=>{
+            try{
+                return String.fromCodePoint(parseInt(h,16));
+            }catch{
+                return m;
+            }
         }
     );
 }
 
 
 /* =========================================================
-   STRING.CHAR
-
-   string.char(104,111,108,97)
-   -> hola
+   string.char
 ========================================================= */
 
-function decodeStringChar(text) {
+function decodeStringChar(s){
 
-    const regex =
-        /string\s*\.\s*char\s*\(\s*([0-9,\s]+)\s*\)/gi;
+    return s.replace(
+        /string\s*\.\s*char\s*\(\s*([0-9,\s]+)\s*\)/gi,
+        (m,args)=>{
 
-    return text.replace(
-        regex,
-        function(match, numbers) {
+            const nums=args.split(",")
+                .map(x=>Number(x.trim()));
 
-            const values = numbers
-                .split(",")
-                .map(x => Number(x.trim()));
+            if(!nums.length) return m;
 
-            if (
-                !values.length ||
-                values.some(
-                    x =>
-                        !Number.isInteger(x) ||
-                        x < 0 ||
-                        x > 255
-                )
-            ) {
-                return match;
-            }
+            if(nums.some(
+                x=>!Number.isInteger(x)||x<0||x>255
+            )) return m;
 
-            return values
-                .map(x => String.fromCharCode(x))
+            return nums
+                .map(x=>String.fromCharCode(x))
                 .join("");
         }
     );
@@ -493,225 +418,412 @@ function decodeStringChar(text) {
 
 
 /* =========================================================
-   DECODIFICAR UNICODE SIMPLE
+   string.byte INVERSO SIMPLE
 ========================================================= */
 
-function decodeUnicodeEscapes(text) {
+function decodeBytePatterns(s){
 
-    return text.replace(
-        /\\u\{([0-9a-fA-F]+)\}/g,
-        function(match, hex) {
+    return s.replace(
+        /string\s*\.\s*char\s*\(\s*([^)]{1,1000})\)/gi,
+        (m,args)=>{
 
-            const value = parseInt(hex, 16);
+            if(!/^\s*\d+(?:\s*,\s*\d+)*\s*$/.test(args))
+                return m;
 
-            if (
-                Number.isInteger(value) &&
-                value <= 0x10FFFF
-            ) {
-                try {
-                    return String.fromCodePoint(value);
-                } catch {
-                    return match;
-                }
+            return decodeStringChar(m);
+        }
+    );
+}
+
+
+/* =========================================================
+   CONCATENACIONES CONSTANTES
+
+   "ab" .. "cd" -> "abcd"
+========================================================= */
+
+function foldStrings(s){
+
+    let old="";
+
+    for(let i=0;i<8 && s!==old;i++){
+
+        old=s;
+
+        s=s.replace(
+            /(["'])(.*?)\1\s*\.\.\s*(["'])(.*?)\3/g,
+            (m,q,a,q2,b)=>q+a+b+q
+        );
+    }
+
+    return s;
+}
+
+
+/* =========================================================
+   HEX PURO
+========================================================= */
+
+function decodeHexStrings(s){
+
+    return s.replace(
+        /(["'])((?:[0-9a-fA-F]{2}){6,})(\1)/g,
+        (m,q,h,q2)=>{
+
+            let out="";
+
+            for(let i=0;i<h.length;i+=2){
+                out+=String.fromCharCode(
+                    parseInt(h.slice(i,i+2),16)
+                );
             }
 
-            return match;
+            /*
+             * Solo sustituimos si parece texto.
+             */
+            const printable=count(
+                /[\x20-\x7E]/g,
+                out
+            );
+
+            return printable/out.length>.7
+                ? q+out+q
+                : m;
         }
     );
 }
 
 
 /* =========================================================
-   DECODIFICAR BASE64 CUANDO ES EVIDENTE
-
-   No intenta ejecutar el resultado.
+   BASE64 CONSERVADOR
 ========================================================= */
 
-function tryBase64(text) {
+function decodeBase64(s){
 
-    return text.replace(
-        /(["'])([A-Za-z0-9+/]{24,}={0,2})\1/g,
-        function(match, quote, encoded) {
+    return s.replace(
+        /(["'])([A-Za-z0-9+/]{32,}={0,2})\1/g,
+        (m,q,b64)=>{
 
-            try {
+            try{
 
-                const decoded =
-                    atob(encoded);
+                const decoded=atob(b64);
 
-                if (
-                    decoded.includes("local ") ||
-                    decoded.includes("function") ||
-                    decoded.includes("return") ||
-                    decoded.includes("game:") ||
-                    decoded.includes("loadstring")
-                ) {
-                    return quote +
-                        decoded +
-                        quote;
+                const printable=count(
+                    /[\x09\x0A\x0D\x20-\x7E]/g,
+                    decoded
+                );
+
+                if(
+                    decoded.length &&
+                    printable/decoded.length>.75
+                ){
+                    return q+decoded+q;
                 }
 
-            } catch {}
+            }catch{}
 
-            return match;
+            return m;
         }
     );
 }
 
 
 /* =========================================================
-   NORMALIZACIÓN BÁSICA
+   URL ENCODED
 ========================================================= */
 
-function normalizeText(text) {
+function decodeUrlEncoding(s){
 
-    return text
-        .replace(/\r\n/g, "\n")
-        .replace(/\r/g, "\n")
-        .replace(/\uFEFF/g, "");
+    return s.replace(
+        /(["'])([^"']{8,})(\1)/g,
+        (m,q,v,q2)=>{
+
+            if(!/%[0-9a-fA-F]{2}/.test(v))
+                return m;
+
+            try{
+
+                const d=decodeURIComponent(v);
+
+                return d!==v
+                    ? q+d+q
+                    : m;
+
+            }catch{
+                return m;
+            }
+        }
+    );
 }
 
 
 /* =========================================================
-   FORMATEADOR BÁSICO
+   TABLAS SIMPLES DE CARACTERES
 
-   No intenta reescribir la lógica.
-   Solo mejora espacios/indentación evidente.
+   {104,111,108,97}
+   ========================================================= */
+
+function decodeNumericTables(s){
+
+    return s.replace(
+        /\{((?:\s*\d+\s*,){2,}\s*\d+)\}/g,
+        (m,body)=>{
+
+            const nums=body
+                .split(",")
+                .map(x=>Number(x.trim()));
+
+            if(nums.some(
+                x=>x<0||x>255||!Number.isInteger(x)
+            )) return m;
+
+            const text=nums
+                .map(x=>String.fromCharCode(x))
+                .join("");
+
+            const printable=count(
+                /[\x20-\x7E]/g,
+                text
+            );
+
+            return printable/text.length>.8
+                ? JSON.stringify(text)
+                : m;
+        }
+    );
+}
+
+
+/* =========================================================
+   CONSTANTES MATEMÁTICAS SEGURAS
+
+   100 + 20 -> 120
+   5 * 4 -> 20
+
+   No ejecutamos Lua.
 ========================================================= */
 
-function basicLuaFormat(code) {
+function foldMath(s){
 
-    let lines = code.split("\n");
+    for(let i=0;i<4;i++){
 
-    let indent = 0;
+        const old=s;
 
-    const result = [];
+        s=s.replace(
+            /(?<![\w.])(\d+)\s*([+*%-])\s*(\d+)(?![\w.])/g,
+            (m,a,op,b)=>{
 
-    for (let rawLine of lines) {
+                const x=Number(a);
+                const y=Number(b);
 
-        let line = rawLine.trim();
+                let r;
 
-        if (!line) {
-            result.push("");
+                if(op==="+") r=x+y;
+                else if(op==="-") r=x-y;
+                else if(op==="*") r=x*y;
+                else if(op==="%") r=x%y;
+
+                return Number.isFinite(r)
+                    ? String(r)
+                    : m;
+            }
+        );
+
+        if(old===s) break;
+    }
+
+    return s;
+}
+
+
+/* =========================================================
+   QUITAR WRAPPERS MUY SIMPLES
+
+   NO elimina lógica arbitrariamente.
+========================================================= */
+
+function unwrapSimpleReturn(s){
+
+    s=s.replace(
+        /^\s*return\s*\(\s*function\s*\(\.\.\.\)\s*([\s\S]*)\s*end\s*\)\s*\(\s*\.\.\.\s*\)\s*;?\s*$/i,
+        "$1"
+    );
+
+    return s;
+}
+
+
+/* =========================================================
+   COMENTARIOS BASURA
+
+   Conservador: solo comentarios largos sin estructura.
+========================================================= */
+
+function cleanNoiseComments(s){
+
+    return s.replace(
+        /--[^\n]{300,}/g,
+        ""
+    );
+}
+
+
+/* =========================================================
+   DETECCIÓN DE VARIABLES
+========================================================= */
+
+function variableStats(s){
+
+    const names=[];
+    const re=
+        /\b(?:local\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=/g;
+
+    let m;
+
+    while((m=re.exec(s))!==null){
+
+        if(!names.includes(m[1]))
+            names.push(m[1]);
+    }
+
+    const suspicious=names.filter(
+        n =>
+            /^[IlO0_]{2,}$/.test(n) ||
+            /^[a-zA-Z]{1,2}\d+$/.test(n) ||
+            n.length>=18
+    );
+
+    return {
+        total:names.length,
+        suspicious:suspicious.length
+    };
+}
+
+
+/* =========================================================
+   PASADA DEL MOTOR
+========================================================= */
+
+function pass(s){
+
+    let x=s;
+
+    x=numericEscapes(x);
+    x=hexEscapes(x);
+    x=unicodeEscapes(x);
+    x=decodeStringChar(x);
+    x=decodeBytePatterns(x);
+    x=decodeHexStrings(x);
+    x=decodeBase64(x);
+    x=decodeUrlEncoding(x);
+    x=decodeNumericTables(x);
+    x=foldStrings(x);
+    x=foldMath(x);
+    x=cleanNoiseComments(x);
+    x=unwrapSimpleReturn(x);
+
+    return x;
+}
+
+
+/* =========================================================
+   MOTOR MULTICAPA
+========================================================= */
+
+function multiPass(code){
+
+    let current=normalize(code);
+
+    const history=[];
+    const max=25;
+
+    for(let i=1;i<=max;i++){
+
+        const before=current;
+        const next=pass(current);
+
+        if(next===before)
+            break;
+
+        history.push({
+            layer:i,
+            before:before.length,
+            after:next.length
+        });
+
+        current=next;
+    }
+
+    return {
+        code:current,
+        history
+    };
+}
+
+
+/* =========================================================
+   FORMATEADOR LUA
+
+   Conservador para no destruir lógica.
+========================================================= */
+
+function formatLua(s){
+
+    const lines=s.split("\n");
+    const out=[];
+    let indent=0;
+
+    for(let raw of lines){
+
+        let line=raw.trim();
+
+        if(!line){
+            out.push("");
             continue;
         }
 
-        const closing =
-            /^(end|until|\})\b/i.test(line);
-
-        if (closing) {
-            indent = Math.max(0, indent - 1);
+        if(
+            /^(end|until)\b/i.test(line) ||
+            /^}/.test(line)
+        ){
+            indent=Math.max(0,indent-1);
         }
 
-        result.push(
-            "    ".repeat(indent) + line
+        out.push(
+            "    ".repeat(indent)+line
         );
 
         const opens =
             /\b(function|if|for|while|repeat|do)\b/i.test(line);
 
         const closes =
-            /\bend\b\s*$/i.test(line) ||
+            /\bend\s*[,;]?\s*$/i.test(line) ||
             /\buntil\b/i.test(line);
 
-        if (opens && !closes) {
+        if(opens && !closes)
             indent++;
-        }
     }
 
-    return result.join("\n");
+    return out.join("\n");
 }
 
 
 /* =========================================================
-   DETECTAR INFORMACIÓN
+   ANÁLISIS
 ========================================================= */
 
-function analyzeCode(code) {
-
-    const loadstrings =
-        (code.match(/\bloadstring\s*\(/gi) || []).length;
-
-    const httpGets =
-        (code.match(/\bHttpGet\s*\(/gi) || []).length;
-
-    const stringChars =
-        (code.match(/string\s*\.\s*char\s*\(/gi) || []).length;
-
-    const numericEscapes =
-        (code.match(/\\[0-9]{1,3}/g) || []).length;
-
-    const hexEscapes =
-        (code.match(/\\x[0-9a-fA-F]{2}/g) || []).length;
-
-    const urls =
-        (code.match(/https?:\/\/[^\s"'`)]+/gi) || []).length;
+function analyzeCode(code){
 
     return {
-        loadstrings,
-        httpGets,
-        stringChars,
-        numericEscapes,
-        hexEscapes,
-        urls
-    };
-}
-
-
-/* =========================================================
-   UNA PASADA
-========================================================= */
-
-function deobfuscationPass(code) {
-
-    let result = code;
-
-    result = decodeNumericEscapes(result);
-
-    result = decodeHexEscapes(result);
-
-    result = decodeUnicodeEscapes(result);
-
-    result = decodeStringChar(result);
-
-    result = tryBase64(result);
-
-    return result;
-}
-
-
-/* =========================================================
-   MULTIPLES PASADAS
-
-   Máximo 20 para evitar ciclos infinitos.
-========================================================= */
-
-function repeatedDeobfuscation(code) {
-
-    let current = code;
-
-    let passes = 0;
-
-    for (
-        let i = 0;
-        i < 20;
-        i++
-    ) {
-
-        const previous = current;
-
-        current =
-            deobfuscationPass(current);
-
-        passes++;
-
-        if (current === previous) {
-            break;
-        }
-    }
-
-    return {
-        code: current,
-        passes
+        loadstrings:count(/\bloadstring\s*\(/gi,code),
+        httpgets:count(/\bHttpGet\s*\(/gi,code),
+        strings:count(/(["'])/g,code)/2,
+        chars:count(/string\s*\.\s*char\s*\(/gi,code),
+        numeric:count(/\\[0-9]{1,3}/g,code),
+        hex:count(/\\x[0-9a-fA-F]{2}/g,code),
+        urls:extractUrls(code).length,
+        functions:count(/\bfunction\b/gi,code),
+        tables:count(/\{/g,code)
     };
 }
 
@@ -720,195 +832,137 @@ function repeatedDeobfuscation(code) {
    PROCESO PRINCIPAL
 ========================================================= */
 
-async function analyzeAndDeobfuscate() {
+async function analyze(){
 
-    let code = input.value;
+    let code=input.value.trim();
 
-    if (!code.trim()) {
+    if(!code){
 
-        statusEl.textContent =
-            "No hay código";
-
+        statusEl.textContent="No hay código";
         return;
     }
 
-    try {
+    statusEl.textContent="Analizando...";
 
-        statusEl.textContent =
-            "Analizando...";
-
+    try{
 
         /*
-         * Primero comprobamos si el texto contiene
-         * un HttpGet.
+         * Primero intentamos encontrar un HttpGet.
+         * Solo recuperamos TEXTO.
          */
 
-        const url =
-            extractHttpGetUrl(code);
+        const url=extractHttpGet(code);
 
+        if(url){
 
-        /*
-         * Si existe una URL, intentamos leerla
-         * como TEXTO.
-         *
-         * Nunca ejecutamos loadstring.
-         */
+            statusEl.textContent=
+                "Obteniendo contenido remoto...";
 
-        if (url) {
+            try{
 
-            const decodedUrl =
-                decodeUrl(url);
+                const response=await fetch(url);
 
-            try {
+                if(response.ok){
 
-                code =
-                    await fetchRemoteText(decodedUrl);
+                    code=await response.text();
 
-                statusEl.textContent =
-                    "Contenido remoto obtenido ✓";
+                }else{
 
-            } catch (error) {
+                    throw new Error(
+                        "HTTP "+response.status
+                    );
+                }
 
-                /*
-                 * Si el navegador bloquea la petición
-                 * por CORS o existe otro problema,
-                 * mostramos la información en lugar
-                 * de intentar ejecutar nada.
-                 */
+            }catch(err){
 
-                output.value =
-`No se pudo leer automáticamente la URL.
+                output.value=
+`URL DETECTADA
 
-URL detectada:
-${decodedUrl}
+${url}
+
+No fue posible obtener automáticamente
+el contenido desde el navegador.
 
 Motivo:
-${error.message}
+${err.message}
 
-Puedes copiar el contenido remoto y pegarlo
-directamente en el panel izquierdo para analizarlo.`;
+Puedes copiar el contenido remoto
+y pegarlo directamente aquí.`;
 
-                document.getElementById(
-                    "analysisInfo"
-                ).textContent =
-                    "URL detectada, pero el navegador bloqueó la lectura.";
+                analysisInfo.textContent=
+                    "URL detectada · acceso remoto bloqueado";
 
-                statusEl.textContent =
-                    "URL detectada";
+                statusEl.textContent="Análisis parcial";
 
                 return;
             }
         }
 
+        const before=analyzeCode(code);
 
-        /*
-         * Normalización
-         */
+        const result=multiPass(code);
 
-        code =
-            normalizeText(code);
+        const formatted=formatLua(result.code);
 
+        const after=analyzeCode(formatted);
 
-        /*
-         * Analizar antes
-         */
+        output.value=formatted;
 
-        const before =
-            analyzeCode(code);
+        outputStats.textContent=
+            formatted.length.toLocaleString()+
+            " caracteres";
 
+        const vars=variableStats(formatted);
 
-        /*
-         * Desofuscación repetida
-         */
+        analysisInfo.innerHTML=
+            `<span class="ok">✓ Análisis terminado</span> · `+
+            `Capas: ${result.history.length} · `+
+            `Loadstrings: ${after.loadstrings} · `+
+            `HttpGet: ${after.httpgets} · `+
+            `string.char: ${before.chars} → ${after.chars} · `+
+            `escapes: ${before.numeric+before.hex} → `+
+            `${after.numeric+after.hex} · `+
+            `variables sospechosas: ${vars.suspicious}`;
 
-        const result =
-            repeatedDeobfuscation(code);
+        statusEl.textContent="Listo ✓";
 
+    }catch(err){
 
-        /*
-         * Formato
-         */
+        output.value=
+`ERROR DE ANÁLISIS
 
-        const formatted =
-            basicLuaFormat(result.code);
+${err.message}`;
 
+        analysisInfo.textContent=
+            "El análisis encontró un error.";
 
-        /*
-         * Mostrar
-         */
-
-        output.value =
-            formatted;
-
-
-        /*
-         * Estadísticas
-         */
-
-        const after =
-            analyzeCode(formatted);
-
-        document.getElementById(
-            "outputStats"
-        ).textContent =
-            `${formatted.length.toLocaleString()} caracteres`;
-
-
-        document.getElementById(
-            "analysisInfo"
-        ).textContent =
-            `Pasadas: ${result.passes} · ` +
-            `loadstring: ${after.loadstrings} · ` +
-            `HttpGet: ${after.httpGets} · ` +
-            `string.char: ${before.stringChars} → ${after.stringChars} · ` +
-            `escapes: ${before.numericEscapes + before.hexEscapes} → ` +
-            `${after.numericEscapes + after.hexEscapes}`;
-
-
-        statusEl.textContent =
-            "Análisis terminado ✓";
-
-    } catch (error) {
-
-        statusEl.textContent =
-            "Error durante el análisis";
-
-        output.value =
-`Ocurrió un error:
-
-${error.message}`;
+        statusEl.textContent="Error";
     }
 }
 
 
 /* =========================================================
-   COPIAR RESULTADO
+   COPIAR
 ========================================================= */
 
-async function copyResult() {
+async function copyResult(){
 
-    if (!output.value) {
-        return;
-    }
+    if(!output.value) return;
 
-    try {
+    try{
 
         await navigator.clipboard.writeText(
             output.value
         );
 
-        statusEl.textContent =
-            "Resultado copiado ✓";
+        statusEl.textContent="Copiado ✓";
 
-    } catch {
+    }catch{
 
-        output.focus();
-        output.select();
-
+        selectResult();
         document.execCommand("copy");
 
-        statusEl.textContent =
-            "Resultado copiado ✓";
+        statusEl.textContent="Copiado ✓";
     }
 }
 
@@ -917,7 +971,7 @@ async function copyResult() {
    SELECCIONAR
 ========================================================= */
 
-function selectResult() {
+function selectResult(){
 
     output.focus();
     output.select();
@@ -925,29 +979,47 @@ function selectResult() {
 
 
 /* =========================================================
+   DESCARGAR LUA
+========================================================= */
+
+function downloadResult(){
+
+    if(!output.value) return;
+
+    const blob=new Blob(
+        [output.value],
+        {type:"text/plain;charset=utf-8"}
+    );
+
+    const url=URL.createObjectURL(blob);
+
+    const a=document.createElement("a");
+
+    a.href=url;
+    a.download="edsusito_deobfuscated.lua";
+
+    a.click();
+
+    URL.revokeObjectURL(url);
+}
+
+
+/* =========================================================
    LIMPIAR
 ========================================================= */
 
-function clearAll() {
+function clearAll(){
 
-    input.value = "";
-    output.value = "";
+    input.value="";
+    output.value="";
 
-    document.getElementById(
-        "inputStats"
-    ).textContent = "0 caracteres";
+    inputStats.textContent="0 caracteres";
+    outputStats.textContent="0 caracteres";
 
-    document.getElementById(
-        "outputStats"
-    ).textContent = "0 caracteres";
+    analysisInfo.textContent=
+        "Esperando análisis.";
 
-    document.getElementById(
-        "analysisInfo"
-    ).textContent =
-        "Sin análisis todavía.";
-
-    statusEl.textContent =
-        "Listo";
+    statusEl.textContent="Listo";
 }
 
 
@@ -955,36 +1027,30 @@ function clearAll() {
    EJEMPLO
 ========================================================= */
 
-function loadExample() {
+function loadExample(){
 
-    input.value =
-`local mensaje = "\\104\\111\\108\\97"
-local texto = string.char(69,100,115,117,115,105,116,111)
+    input.value=
+`local a = "\\72\\111\\108\\97"
+local b = string.char(69,100,115,117,115,105,116,111)
+local c = "Edsu" .. "sito"
 
-print(mensaje)
-print(texto)`;
+print(a)
+print(b)
+print(c)`;
 
+    inputStats.textContent=
+        input.value.length.toLocaleString()+
+        " caracteres";
 
-    updateInputStats();
+    output.value="";
 
-    output.value = "";
+    outputStats.textContent="0 caracteres";
 
-    document.getElementById(
-        "outputStats"
-    ).textContent =
-        "0 caracteres";
+    analysisInfo.textContent=
+        "Ejemplo cargado · pulsa DESOFUSCAR";
 
-    document.getElementById(
-        "analysisInfo"
-    ).textContent =
-        "Ejemplo cargado. Pulsa DESOFUSCAR.";
-
-    statusEl.textContent =
-        "Ejemplo listo";
+    statusEl.textContent="Ejemplo listo";
 }
-
-
-updateInputStats();
 
 </script>
 
