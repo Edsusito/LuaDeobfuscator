@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edsusito Lua Deobfuscator</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    height: 100vh;
+    background: #0b0f14;
+    color: #e6edf3;
+    font-family: "Segoe UI", Arial, sans-serif;
+}
+
+.app {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    height: 70px;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #11161d;
+    border-bottom: 1px solid #30363d;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo {
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+    background: #238636;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+}
+
+.title {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.subtitle {
+    font-size: 12px;
+    color: #8b949e;
+}
+
+.status {
+    color: #8b949e;
+    font-size: 12px;
+}
+
+main {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    padding: 14px;
+}
+
+.panel {
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: #11161d;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.panel-head {
+    height: 48px;
+    padding: 0 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #30363d;
+}
+
+.panel-title {
+    font-weight: 700;
+    font-size: 14px;
+}
+
+textarea {
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+    resize: none;
+    border: 0;
+    outline: none;
+    background: #0b0f14;
+    color: #c9d1d9;
+    padding: 17px;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 13px;
+    line-height: 1.55;
+}
+
+textarea::placeholder {
+    color: #484f58;
+}
+
+textarea[readonly] {
+    color: #d2d8de;
+}
+
+.toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 11px;
+    border-top: 1px solid #30363d;
+}
+
+button {
+    border: 0;
+    border-radius: 7px;
+    padding: 9px 14px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 12px;
+}
+
+button:hover {
+    filter: brightness(1.12);
+}
+
+.primary {
+    background: #238636;
+    color: white;
+}
+
+.secondary {
+    background: #21262d;
+    color: #c9d1d9;
+    border: 1px solid #30363d;
+}
+
+.danger {
+    background: #8b1e2d;
+    color: white;
+}
+
+.info {
+    padding: 10px 15px;
+    font-size: 11px;
+    color: #8b949e;
+    border-top: 1px solid #30363d;
+}
+
+footer {
+    height: 35px;
+    display: flex;
+    align-items: center;
+    padding: 0 15px;
+    background: #11161d;
+    border-top: 1px solid #30363d;
+    color: #8b949e;
+    font-size: 11px;
+}
+
+@media (max-width: 900px) {
+    main {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<header>
+    <div class="brand">
+        <div class="logo">E</div>
+
+        <div>
+            <div class="title">Edsusito Lua Deobfuscator</div>
+            <div class="subtitle">
+                Análisis estático · no ejecuta Lua
+            </div>
+        </div>
+    </div>
+
+    <div class="status" id="status">
+        Listo
+    </div>
+</header>
+
+
+<main>
+
+<section class="panel">
+
+    <div class="panel-head">
+        <span class="panel-title">
+            Código / Loadstring
+        </span>
+
+        <span class="status" id="inputStats">
+            0 caracteres
+        </span>
+    </div>
+
+    <textarea
+        id="input"
+        spellcheck="false"
+        placeholder="Pega aquí código Lua o un loadstring(...)..."
+    ></textarea>
+
+    <div class="toolbar">
+
+        <button
+            class="primary"
+            onclick="analyzeAndDeobfuscate()">
+            ⚡ DESOFUSCAR
+        </button>
+
+        <button
+            class="secondary"
+            onclick="loadExample()">
+            EJEMPLO
+        </button>
+
+        <button
+            class="danger"
+            onclick="clearAll()">
+            LIMPIAR
+        </button>
+
+    </div>
+
+    <div class="info">
+        Las URLs se leen como texto. El contenido remoto nunca se ejecuta.
+    </div>
+
+</section>
+
+
+<section class="panel">
+
+    <div class="panel-head">
+
+        <span class="panel-title">
+            Resultado
+        </span>
+
+        <span class="status" id="outputStats">
+            0 caracteres
+        </span>
+
+    </div>
+
+    <textarea
+        id="output"
+        spellcheck="false"
+        readonly
+        placeholder="Aquí aparecerá el código analizado..."
+    ></textarea>
+
+    <div class="toolbar">
+
+        <button
+            class="primary"
+            onclick="copyResult()">
+            📋 COPIAR
+        </button>
+
+        <button
+            class="secondary"
+            onclick="selectResult()">
+            SELECCIONAR
+        </button>
+
+    </div>
+
+    <div class="info" id="analysisInfo">
+        Sin análisis todavía.
+    </div>
+
+</section>
+
+</main>
+
+
+<footer>
+    Análisis local · máximo 20 pasadas · sin ejecución de código
+</footer>
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   ELEMENTOS
+========================================================= */
+
+const input = document.getElementById("input");
+const output = document.getElementById("output");
+const statusEl = document.getElementById("status");
+
+input.addEventListener("input", updateInputStats);
+
+
+/* =========================================================
+   ESTADÍSTICAS
+========================================================= */
+
+function updateInputStats() {
+
+    const text = input.value;
+
+    document.getElementById("inputStats").textContent =
+        `${text.length.toLocaleString()} caracteres`;
+}
+
+
+/* =========================================================
+   EXTRAER URL DE HttpGet
+========================================================= */
+
+function extractHttpGetUrl(text) {
+
+    const patterns = [
+
+        /game\s*:\s*HttpGet\s*\(\s*["']([^"']+)["']\s*\)/i,
+
+        /HttpGet\s*\(\s*["']([^"']+)["']\s*\)/i,
+
+        /loadstring\s*\(\s*game\s*:\s*HttpGet\s*\(\s*["']([^"']+)["']/i
+
+    ];
+
+    for (const regex of patterns) {
+
+        const match = text.match(regex);
+
+        if (match && match[1]) {
+            return match[1];
+        }
+    }
+
+    return null;
+}
+
+
+/* =========================================================
+   DECODIFICAR URL
+========================================================= */
+
+function decodeUrl(url) {
+
+    try {
+        return decodeURIComponent(url);
+    } catch {
+        return url;
+    }
+}
+
+
+/* =========================================================
+   OBTENER TEXTO REMOTO
+========================================================= */
+
+async function fetchRemoteText(url) {
+
+    statusEl.textContent = "Leyendo contenido remoto...";
+
+    const response = await fetch(url, {
+        method: "GET"
+    });
+
+    if (!response.ok) {
+
+        throw new Error(
+            `HTTP ${response.status} ${response.statusText}`
+        );
+    }
+
+    return await response.text();
+}
+
+
+/* =========================================================
+   ESCAPES NUMÉRICOS LUA
+
+   \104\111\108\97
+   -> hola
+========================================================= */
+
+function decodeNumericEscapes(text) {
+
+    return text.replace(
+        /\\([0-9]{1,3})/g,
+        function(match, number) {
+
+            const value = Number(number);
+
+            if (
+                Number.isInteger(value) &&
+                value >= 0 &&
+                value <= 255
+            ) {
+                return String.fromCharCode(value);
+            }
+
+            return match;
+        }
+    );
+}
+
+
+/* =========================================================
+   ESCAPES HEX
+
+   \x68\x6f\x6c\x61
+   -> hola
+========================================================= */
+
+function decodeHexEscapes(text) {
+
+    return text.replace(
+        /\\x([0-9a-fA-F]{2})/g,
+        function(match, hex) {
+
+            return String.fromCharCode(
+                parseInt(hex, 16)
+            );
+        }
+    );
+}
+
+
+/* =========================================================
+   STRING.CHAR
+
+   string.char(104,111,108,97)
+   -> hola
+========================================================= */
+
+function decodeStringChar(text) {
+
+    const regex =
+        /string\s*\.\s*char\s*\(\s*([0-9,\s]+)\s*\)/gi;
+
+    return text.replace(
+        regex,
+        function(match, numbers) {
+
+            const values = numbers
+                .split(",")
+                .map(x => Number(x.trim()));
+
+            if (
+                !values.length ||
+                values.some(
+                    x =>
+                        !Number.isInteger(x) ||
+                        x < 0 ||
+                        x > 255
+                )
+            ) {
+                return match;
+            }
+
+            return values
+                .map(x => String.fromCharCode(x))
+                .join("");
+        }
+    );
+}
+
+
+/* =========================================================
+   DECODIFICAR UNICODE SIMPLE
+========================================================= */
+
+function decodeUnicodeEscapes(text) {
+
+    return text.replace(
+        /\\u\{([0-9a-fA-F]+)\}/g,
+        function(match, hex) {
+
+            const value = parseInt(hex, 16);
+
+            if (
+                Number.isInteger(value) &&
+                value <= 0x10FFFF
+            ) {
+                try {
+                    return String.fromCodePoint(value);
+                } catch {
+                    return match;
+                }
+            }
+
+            return match;
+        }
+    );
+}
+
+
+/* =========================================================
+   DECODIFICAR BASE64 CUANDO ES EVIDENTE
+
+   No intenta ejecutar el resultado.
+========================================================= */
+
+function tryBase64(text) {
+
+    return text.replace(
+        /(["'])([A-Za-z0-9+/]{24,}={0,2})\1/g,
+        function(match, quote, encoded) {
+
+            try {
+
+                const decoded =
+                    atob(encoded);
+
+                if (
+                    decoded.includes("local ") ||
+                    decoded.includes("function") ||
+                    decoded.includes("return") ||
+                    decoded.includes("game:") ||
+                    decoded.includes("loadstring")
+                ) {
+                    return quote +
+                        decoded +
+                        quote;
+                }
+
+            } catch {}
+
+            return match;
+        }
+    );
+}
+
+
+/* =========================================================
+   NORMALIZACIÓN BÁSICA
+========================================================= */
+
+function normalizeText(text) {
+
+    return text
+        .replace(/\r\n/g, "\n")
+        .replace(/\r/g, "\n")
+        .replace(/\uFEFF/g, "");
+}
+
+
+/* =========================================================
+   FORMATEADOR BÁSICO
+
+   No intenta reescribir la lógica.
+   Solo mejora espacios/indentación evidente.
+========================================================= */
+
+function basicLuaFormat(code) {
+
+    let lines = code.split("\n");
+
+    let indent = 0;
+
+    const result = [];
+
+    for (let rawLine of lines) {
+
+        let line = rawLine.trim();
+
+        if (!line) {
+            result.push("");
+            continue;
+        }
+
+        const closing =
+            /^(end|until|\})\b/i.test(line);
+
+        if (closing) {
+            indent = Math.max(0, indent - 1);
+        }
+
+        result.push(
+            "    ".repeat(indent) + line
+        );
+
+        const opens =
+            /\b(function|if|for|while|repeat|do)\b/i.test(line);
+
+        const closes =
+            /\bend\b\s*$/i.test(line) ||
+            /\buntil\b/i.test(line);
+
+        if (opens && !closes) {
+            indent++;
+        }
+    }
+
+    return result.join("\n");
+}
+
+
+/* =========================================================
+   DETECTAR INFORMACIÓN
+========================================================= */
+
+function analyzeCode(code) {
+
+    const loadstrings =
+        (code.match(/\bloadstring\s*\(/gi) || []).length;
+
+    const httpGets =
+        (code.match(/\bHttpGet\s*\(/gi) || []).length;
+
+    const stringChars =
+        (code.match(/string\s*\.\s*char\s*\(/gi) || []).length;
+
+    const numericEscapes =
+        (code.match(/\\[0-9]{1,3}/g) || []).length;
+
+    const hexEscapes =
+        (code.match(/\\x[0-9a-fA-F]{2}/g) || []).length;
+
+    const urls =
+        (code.match(/https?:\/\/[^\s"'`)]+/gi) || []).length;
+
+    return {
+        loadstrings,
+        httpGets,
+        stringChars,
+        numericEscapes,
+        hexEscapes,
+        urls
+    };
+}
+
+
+/* =========================================================
+   UNA PASADA
+========================================================= */
+
+function deobfuscationPass(code) {
+
+    let result = code;
+
+    result = decodeNumericEscapes(result);
+
+    result = decodeHexEscapes(result);
+
+    result = decodeUnicodeEscapes(result);
+
+    result = decodeStringChar(result);
+
+    result = tryBase64(result);
+
+    return result;
+}
+
+
+/* =========================================================
+   MULTIPLES PASADAS
+
+   Máximo 20 para evitar ciclos infinitos.
+========================================================= */
+
+function repeatedDeobfuscation(code) {
+
+    let current = code;
+
+    let passes = 0;
+
+    for (
+        let i = 0;
+        i < 20;
+        i++
+    ) {
+
+        const previous = current;
+
+        current =
+            deobfuscationPass(current);
+
+        passes++;
+
+        if (current === previous) {
+            break;
+        }
+    }
+
+    return {
+        code: current,
+        passes
+    };
+}
+
+
+/* =========================================================
+   PROCESO PRINCIPAL
+========================================================= */
+
+async function analyzeAndDeobfuscate() {
+
+    let code = input.value;
+
+    if (!code.trim()) {
+
+        statusEl.textContent =
+            "No hay código";
+
+        return;
+    }
+
+    try {
+
+        statusEl.textContent =
+            "Analizando...";
+
+
+        /*
+         * Primero comprobamos si el texto contiene
+         * un HttpGet.
+         */
+
+        const url =
+            extractHttpGetUrl(code);
+
+
+        /*
+         * Si existe una URL, intentamos leerla
+         * como TEXTO.
+         *
+         * Nunca ejecutamos loadstring.
+         */
+
+        if (url) {
+
+            const decodedUrl =
+                decodeUrl(url);
+
+            try {
+
+                code =
+                    await fetchRemoteText(decodedUrl);
+
+                statusEl.textContent =
+                    "Contenido remoto obtenido ✓";
+
+            } catch (error) {
+
+                /*
+                 * Si el navegador bloquea la petición
+                 * por CORS o existe otro problema,
+                 * mostramos la información en lugar
+                 * de intentar ejecutar nada.
+                 */
+
+                output.value =
+`No se pudo leer automáticamente la URL.
+
+URL detectada:
+${decodedUrl}
+
+Motivo:
+${error.message}
+
+Puedes copiar el contenido remoto y pegarlo
+directamente en el panel izquierdo para analizarlo.`;
+
+                document.getElementById(
+                    "analysisInfo"
+                ).textContent =
+                    "URL detectada, pero el navegador bloqueó la lectura.";
+
+                statusEl.textContent =
+                    "URL detectada";
+
+                return;
+            }
+        }
+
+
+        /*
+         * Normalización
+         */
+
+        code =
+            normalizeText(code);
+
+
+        /*
+         * Analizar antes
+         */
+
+        const before =
+            analyzeCode(code);
+
+
+        /*
+         * Desofuscación repetida
+         */
+
+        const result =
+            repeatedDeobfuscation(code);
+
+
+        /*
+         * Formato
+         */
+
+        const formatted =
+            basicLuaFormat(result.code);
+
+
+        /*
+         * Mostrar
+         */
+
+        output.value =
+            formatted;
+
+
+        /*
+         * Estadísticas
+         */
+
+        const after =
+            analyzeCode(formatted);
+
+        document.getElementById(
+            "outputStats"
+        ).textContent =
+            `${formatted.length.toLocaleString()} caracteres`;
+
+
+        document.getElementById(
+            "analysisInfo"
+        ).textContent =
+            `Pasadas: ${result.passes} · ` +
+            `loadstring: ${after.loadstrings} · ` +
+            `HttpGet: ${after.httpGets} · ` +
+            `string.char: ${before.stringChars} → ${after.stringChars} · ` +
+            `escapes: ${before.numericEscapes + before.hexEscapes} → ` +
+            `${after.numericEscapes + after.hexEscapes}`;
+
+
+        statusEl.textContent =
+            "Análisis terminado ✓";
+
+    } catch (error) {
+
+        statusEl.textContent =
+            "Error durante el análisis";
+
+        output.value =
+`Ocurrió un error:
+
+${error.message}`;
+    }
+}
+
+
+/* =========================================================
+   COPIAR RESULTADO
+========================================================= */
+
+async function copyResult() {
+
+    if (!output.value) {
+        return;
+    }
+
+    try {
+
+        await navigator.clipboard.writeText(
+            output.value
+        );
+
+        statusEl.textContent =
+            "Resultado copiado ✓";
+
+    } catch {
+
+        output.focus();
+        output.select();
+
+        document.execCommand("copy");
+
+        statusEl.textContent =
+            "Resultado copiado ✓";
+    }
+}
+
+
+/* =========================================================
+   SELECCIONAR
+========================================================= */
+
+function selectResult() {
+
+    output.focus();
+    output.select();
+}
+
+
+/* =========================================================
+   LIMPIAR
+========================================================= */
+
+function clearAll() {
+
+    input.value = "";
+    output.value = "";
+
+    document.getElementById(
+        "inputStats"
+    ).textContent = "0 caracteres";
+
+    document.getElementById(
+        "outputStats"
+    ).textContent = "0 caracteres";
+
+    document.getElementById(
+        "analysisInfo"
+    ).textContent =
+        "Sin análisis todavía.";
+
+    statusEl.textContent =
+        "Listo";
+}
+
+
+/* =========================================================
+   EJEMPLO
+========================================================= */
+
+function loadExample() {
+
+    input.value =
+`local mensaje = "\\104\\111\\108\\97"
+local texto = string.char(69,100,115,117,115,105,116,111)
+
+print(mensaje)
+print(texto)`;
+
+
+    updateInputStats();
+
+    output.value = "";
+
+    document.getElementById(
+        "outputStats"
+    ).textContent =
+        "0 caracteres";
+
+    document.getElementById(
+        "analysisInfo"
+    ).textContent =
+        "Ejemplo cargado. Pulsa DESOFUSCAR.";
+
+    statusEl.textContent =
+        "Ejemplo listo";
+}
+
+
+updateInputStats();
+
+</script>
+
+</body>
+</html>
