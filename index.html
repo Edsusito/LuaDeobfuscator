@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Edsusito Lua Deobfuscator – Motor Multi-Capa</title>
+<style>
+:root{
+    --bg:#090a10;--panel:#10121a;--panel2:#0c0e15;--line:#272b38;
+    --text:#eef1f7;--muted:#8b91a3;--accent:#a78bfa;--accent2:#7c3aed;
+    --good:#55d187;--warn:#eabf55;--bad:#ef6675;
+}
+*{box-sizing:border-box}
+body{
+    margin:0;height:100vh;overflow:hidden;
+    background:
+        radial-gradient(circle at 15% 0%,#21143d 0,transparent 32%),
+        radial-gradient(circle at 90% 100%,#151a35 0,transparent 35%),
+        var(--bg);
+    color:var(--text);font-family:Segoe UI,Arial,sans-serif;
+}
+.app{height:100vh;display:flex;flex-direction:column}
+header{
+    height:60px;display:flex;align-items:center;justify-content:space-between;
+    padding:0 18px;background:rgba(16,18,26,.92);border-bottom:1px solid var(--line);
+    backdrop-filter:blur(14px);flex-shrink:0;
+}
+.brand{display:flex;align-items:center;gap:10px}
+.avatar{
+    width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,var(--accent2),#20243b);border:1px solid #59418c;
+    box-shadow:0 0 25px #7c3aed33;font-weight:900;font-size:16px;
+}
+.title{font-size:16px;font-weight:800}
+.subtitle{color:var(--muted);font-size:10px;margin-top:1px}
+.status{color:var(--muted);font-size:12px}
+main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px}
+.panel{
+    min-width:0;min-height:0;display:flex;flex-direction:column;overflow:hidden;
+    border:1px solid var(--line);border-radius:12px;background:rgba(16,18,26,.94);
+    box-shadow:0 15px 45px #0005;
+}
+.panel-head{
+    height:44px;padding:0 12px;display:flex;align-items:center;justify-content:space-between;
+    border-bottom:1px solid var(--line);flex-shrink:0;
+}
+.panel-title{font-size:12px;font-weight:800}
+textarea{
+    flex:1;min-height:0;width:100%;resize:none;border:0;outline:0;padding:14px;
+    background:var(--panel2);color:#dce0e9;font:13px/1.5 Consolas,"Courier New",monospace;
+}
+textarea::placeholder{color:#4d5363}
+.toolbar{display:flex;flex-wrap:wrap;gap:6px;padding:8px;border-top:1px solid var(--line);flex-shrink:0;align-items:center}
+button{
+    border:0;border-radius:6px;padding:7px 12px;color:white;background:#202431;
+    border:1px solid var(--line);cursor:pointer;font-size:11px;font-weight:700;
+    transition:all .15s;
+}
+button:hover{filter:brightness(1.18);transform:translateY(-1px)}
+button:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.primary{background:linear-gradient(135deg,var(--accent2),var(--accent));border:0}
+.danger{color:#ff8d99}
+.info{
+    min-height:28px;padding:6px 10px;color:var(--muted);font-size:10px;
+    border-top:1px solid var(--line);flex-shrink:0;overflow-y:auto;
+}
+.tabs{display:flex;gap:4px;padding:4px 8px;border-bottom:1px solid var(--line);flex-shrink:0}
+.tab{background:transparent;border:0;color:var(--muted);padding:4px 10px;font-size:11px;font-weight:700;border-radius:4px;cursor:pointer}
+.tab.active{background:var(--accent2);color:#fff}
+.tab-content{flex:1;display:none;flex-direction:column;min-height:0}
+.tab-content.active{display:flex}
+.config{
+    display:flex;flex-wrap:wrap;gap:14px;padding:6px 10px;border-bottom:1px solid var(--line);
+    background:rgba(124,58,237,.05);flex-shrink:0;align-items:center;font-size:11px;color:var(--muted);
+}
+.config label{display:flex;align-items:center;gap:5px;cursor:pointer;user-select:none}
+.config input{accent-color:var(--accent2);cursor:pointer}
+footer{
+    height:30px;display:flex;align-items:center;justify-content:space-between;
+    padding:0 12px;color:var(--muted);font-size:9px;border-top:1px solid var(--line);
+    background:#0d0f16;flex-shrink:0;
+}
+.ok{color:var(--good)}.warn{color:var(--warn)}.bad{color:var(--bad)}
+.small-input{
+    background:#202431;border:1px solid var(--line);color:#dce0e9;border-radius:6px;
+    padding:6px 8px;font-size:11px;outline:0;width:180px;
+}
+.kv{display:flex;justify-content:space-between;gap:8px;padding:2px 0;border-bottom:1px dashed #1c2029}
+.kv b{color:var(--accent)}
+.layer-item{padding:5px 8px;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;background:var(--panel2);font-size:11px}
+.layer-item .tag{font-weight:700;color:var(--accent)}
+@media(max-width:900px){
+    body{overflow:auto}.app{height:auto;min-height:100vh}
+    main{grid-template-columns:1fr;min-height:calc(100vh - 90px)}.panel{min-height:420px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+<div class="brand">
+<div class="avatar">E</div>
+<div>
+<div class="title">Edsusito Lua Deobfuscator</div>
+<div class="subtitle">Motor multi-capa · Sandbox Fengari · >90% de ofuscadores</div>
+</div>
+</div>
+<div class="status" id="status">Listo</div>
+</header>
+<div class="config">
+<label><input type="checkbox" id="cfgSandbox" checked> Sandbox Fengari (ejecuta decodificadores)</label>
+<label><input type="checkbox" id="cfgRename" checked> Renombrar variables</label>
+<label><input type="checkbox" id="cfgVM" checked> Flattening / VM</label>
+<label>Máx. capas <select id="cfgLayers" style="background:#202431;border:1px solid var(--line);color:#fff;border-radius:6px;padding:3px">
+<option value="20">20</option><option value="50" selected>50</option><option value="100">100</option><option value="250">250</option>
+</select></label>
+</div>
+<main>
+<section class="panel">
+<div class="panel-head">
+<span class="panel-title">Código / Loadstring / URL</span>
+<span class="status" id="inputStats">0 caracteres</span>
+</div>
+<textarea id="input" spellcheck="false" placeholder="Pega aquí Lua ofuscado (Luraph, Luarmor, IronBrew, Moonsec, VMs...)..."></textarea>
+<div class="toolbar">
+<button class="primary" onclick="analyze()">⚡ DESOFUSCAR</button>
+<button onclick="loadHardExample()">🧪 EJEMPLO</button>
+<button onclick="openFile()">📂 .LUA</button>
+<button onclick="clearAll()" class="danger">🗑 LIMPIAR</button>
+</div>
+<div class="toolbar" style="border-top:0">
+<input class="small-input" id="urlBox" placeholder="https://...script.lua" spellcheck="false">
+<button onclick="loadURL()">🌐 CARGAR URL</button>
+</div>
+<div class="info" id="inputInfo">Pega el código y pulsa Desofuscar. Las capas se van pelando automáticamente.</div>
+</section>
+<section class="panel">
+<div class="panel-head">
+<span class="panel-title">Resultado</span>
+<span class="status" id="outputStats">0 caracteres</span>
+</div>
+<div class="tabs">
+<button class="tab active" data-tab="tab-result">Resultado</button>
+<button class="tab" data-tab="tab-stats">Estadísticas</button>
+<button class="tab" data-tab="tab-layers">Pasos</button>
+<button class="tab" data-tab="tab-sandbox">Sandbox</button>
+</div>
+<div class="tab-content active" id="tab-result">
+<textarea id="output" spellcheck="false" readonly placeholder="Aquí aparecerá el resultado..."></textarea>
+<div class="toolbar">
+<button class="primary" onclick="copyResult()">📋 COPIAR</button>
+<button onclick="selectResult()">SELECT</button>
+<button onclick="downloadResult()">💾 .LUA</button>
+</div>
+</div>
+<div class="tab-content" id="tab-stats">
+<pre id="tabStats" style="flex:1;margin:0;padding:12px;overflow:auto;background:var(--panel2);font-size:12px;white-space:pre-wrap;color:#c6cbd8"></pre>
+</div>
+<div class="tab-content" id="tab-layers">
+<pre id="tabLayers" style="flex:1;margin:0;padding:12px;overflow:auto;background:var(--panel2);font-size:11px;white-space:pre-wrap;color:#c6cbd8"></pre>
+</div>
+<div class="tab-content" id="tab-sandbox">
+<div style="flex:1;min-height:0;padding:10px;overflow:auto;background:var(--panel2)" id="sandboxLog"></div>
+</div>
+<div class="info" id="analysisInfo">Esperando análisis.</div>
+</section>
+</main>
+<footer>
+<span>Edsusito Deobfuscator · Multi-capa + Sandbox</span>
+<span>Escapes · Base64/85/91 · XOR · string.char · Flattening · VM · loadstring hook</span>
+</footer>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/fengari-web@0.1.4/dist/fengari-web.min.js"></script>
+<script>
+/* =========================================================
+   ESTADO + REFERENCIAS
+========================================================= */
+const input = document.getElementById("input");
+const output = document.getElementById("output");
+const statusEl = document.getElementById("status");
+const inputStats = document.getElementById("inputStats");
+const outputStats = document.getElementById("outputStats");
+const analysisInfo = document.getElementById("analysisInfo");
+const inputInfo = document.getElementById("inputInfo");
+const tabStats = document.getElementById("tabStats");
+const tabLayers = document.getElementById("tabLayers");
+const sandboxLog = document.getElementById("sandboxLog");
+const urlBox = document.getElementById("urlBox");
+
+const useSandbox = ()=>document.getElementById("cfgSandbox").checked;
+const useRename  = ()=>document.getElementById("cfgRename").checked;
+const useVM      = ()=>document.getElementById("cfgVM").checked;
+const maxLayers  = ()=>Number(document.getElementById("cfgLayers").value);
+
+const LUA_KEYWORDS = new Set(["and","break","do","else","elseif","end","false","for","function","goto","if","in","local","nil","not","or","repeat","return","then","true","until","while"]);
+
+input.addEventListener("input",()=>{ inputStats.textContent = input.value.length.toLocaleString()+" caracteres"; });
+
+document.querySelectorAll('.tab').forEach(tab=>{
+    tab.addEventListener('click',()=>{
+        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+        tab.classList.add('active');
+        document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+        document.getElementById(tab.dataset.tab).classList.add('active');
+    });
+});
+
+/* =========================================================
+   UTILIDADES GENERALES
+========================================================= */
+function normalize(s){ return s.replace(/\r\n/g,"\n").replace(/\r/g,"\n").replace(/\uFEFF/g,""); }
+function count(re,s){ return (s.match(re)||[]).length; }
+
+/* --- Scanner: aplica fn SOLO fuera de strings y comentarios --- */
+function applyOutsideStrings(s, fn){
+    let res=""; let i=0;
+    while(i<s.length){
+        const c=s[i];
+        if(c==='"'||c==="'"){
+            let j=i+1; let seg=c;
+            while(j<s.length){
+                const cc=s[j];
+                if(cc==='\\'&&j+1<s.length){ seg+=cc+s[j+1]; j+=2; continue; }
+                seg+=cc; j++;
+                if(cc===c) break;
+            }
+            res+=seg; i=j; continue;
+        }
+        if(c==='-'&&s[i+1]==='-'){
+            const lm=/^--\[(=*)\[[\s\S]*?\]\1\]/.exec(s.slice(i));
+            if(lm){ res+=lm[0]; i+=lm[0].length; continue; }
+            const nl=s.indexOf("\n",i);
+            const seg=nl===-1?s.slice(i):s.slice(i,nl);
+            res+=seg; i+=seg.length; continue;
+        }
+        if(c==='['){
+            const lm=/^\[(=*)\[[\s\S]*?\]\1\]/.exec(s.slice(i));
+            if(lm){ res+=lm[0]; i+=lm[0].length; continue; }
+        }
+        let j=i;
+        while(j<s.length && s[j]!=='"' && s[j]!=='\'' && !(s[j]==='-'&&s[j+1]==='-') && s[j]!=='[') j++;
+        res+=fn(s.slice(i,j)); i=j;
+    }
+    return res;
+}
+
+/* --- Evaluador seguro de expresiones numéricas puras --- */
+function evalNumericExpr(s){
+    if(!/^[0-9a-fA-FxX.+\-*\/%^()\s]+$/.test(s)) return null;
+    s=s.replace(/0[xX][0-9a-fA-F]+/g,m=>String(parseInt(m,16)));
+    s=s.replace(/\^/g,"**");
+    if(!/^[\d.+\-*\/%()*\s]+$/.test(s)) return null;
+    try{
+        const f=new Function("return ("+s+")");
+        const r=f();
+        return (typeof r==="number"&&Number.isFinite(r))?r:null;
+    }catch(e){ return null; }
+}
+
+/* =========================================================
+   DECODIFICADORES DE ESCAPES / CADENAS
+========================================================= */
+function numericEscapes(s){
+    return s.replace(/\\([0-9]{1,3})(?![0-9])/g,(m,n)=>{
+        const x=Number(n); return x<=255?String.fromCharCode(x):m;
+    });
+}
+function hexEscapes(s){
+    return s.replace(/\\x([0-9a-fA-F]{2})/g,(m,h)=>String.fromCharCode(parseInt(h,16)));
+}
+function unicodeEscapes(s){
+    s=s.replace(/\\u\{([0-9a-fA-F]+)\}/g,(m,h)=>{ try{ return String.fromCodePoint(parseInt(h,16)); }catch(e){ return m; } });
+    s=s.replace(/\\u([0-9a-fA-F]{4})/g,(m,h)=>String.fromCharCode(parseInt(h,16)));
+    return s;
+}
+function luaStandardEscapes(s){
+    const map={'a':'\x07','b':'\x08','f':'\x0c','n':'\n','r':'\r','t':'\t','v':'\x0b','\\':'\\','"':'"',"'":"'",'z':''};
+    return s.replace(/\\([abfnrtv\\"'])/g,(m,c)=>map[c]||m).replace(/\\z\s*/g,'');
+}
+
+function decodeStringChar(s){
+    return s.replace(/string\s*\.\s*char\s*\(\s*([^)]+)\s*\)/gi,(m,args)=>{
+        const parts=args.split(',').map(x=>x.trim());
+        const nums=parts.map(x=>{
+            const n=Number(x);
+            if(!Number.isNaN(n)&&Number.isInteger(n)) return n;
+            const ev=evalNumericExpr(x);
+            if(ev!==null&&Number.isInteger(ev)) return ev;
+            return null;
+        });
+        if(nums.some(x=>x===null||x<0||x>255)) return m;
+        return nums.map(x=>String.fromCharCode(x)).join("");
+    });
+}
+
+function decodeBase64(s){
+    s=s.replace(/Base64\s*\.\s*decode\s*\(\s*["']([^"']+)["']\s*\)/g,(m,b64)=>{
+        try{ return JSON.stringify(atob(b64.replace(/-/g,'+').replace(/_/g,'/'))); }catch(e){ return m; }
+    });
+    s=s.replace(/(["'])([A-Za-z0-9+/=]{12,}={0,2})\1/g,(m,q,b64)=>{
+        try{
+            const decoded=atob(b64);
+            const printable=decoded.replace(/[^\x20-\x7E\n\r\t]/g,'').length;
+            if(decoded.length>4 && printable/decoded.length>0.7) return q+decoded+q;
+        }catch(e){}
+        return m;
+    });
+    return s;
+}
+
+function decodeBase85(s){
+    return s.replace(/(["'])(<~[\s\S]*?~>)\1/g,(m,q,encoded)=>{
+        try{
+            const data=encoded.slice(2,-2).replace(/\s/g,'');
+            if(data.length===0) return m;
+            let out=''; let i=0;
+            while(i<data.length){
+                let chunk=data.slice(i,i+5);
+                if(chunk.length<5) chunk=chunk.padEnd(5,'u');
+                let n=0;
+                for(let j=0;j<5;j++){
+                    const c=chunk.charCodeAt(j);
+                    if(c<33||c>117) throw new Error('bad');
+                    n=n*85+(c-33);
+                }
+                const bytes=[];
+                for(let j=0;j<4;j++) bytes.push((n>>(8*(3-j)))&0xFF);
+                const trunc=(data.length-i)<5?4-(5-(data.length-i)):4;
+                out+=String.fromCharCode.apply(null,bytes.slice(0,trunc));
+                i+=5;
+            }
+            return q+out+q;
+        }catch(e){ return m; }
+    });
+}
+
+function decodeBase91(s){
+    return s.replace(/(["'])([A-Za-z0-9!#$%&()*+,./:;<=>?@\[\]^_`{|}~-]{20,})\1/g,(m,q,str)=>{
+        try{
+            const decoded=base91Decode(str);
+            if(decoded&&decoded.length>0){
+                const printable=decoded.replace(/[^\x20-\x7E\n\r\t]/g,'').length;
+                if(printable/decoded.length>0.7) return q+decoded+q;
+            }
+            return m;
+        }catch(e){ return m; }
+    });
+}
+function base91Decode(str){
+    const alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&()*+,./:;<=>?@[]^_`{|}~\"";
+    const map={}; for(let i=0;i<alphabet.length;i++) map[alphabet[i]]=i;
+    let v=-1,b=0,n=0,out=[];
+    for(let i=0;i<str.length;i++){
+        const c=str[i];
+        if(!(c in map)) continue;
+        const k=map[c];
+        if(v<0) v=k;
+        else{
+            v+=k*91; b|=v<<n;
+            n+=(v&8191)>88?13:14;
+            while(n>7){ out.push(b&0xFF); b>>=8; n-=8; }
+            v=-1;
+        }
+    }
+    if(v>-1){ b|=v<<n; out.push(b&0xFF); }
+    return String.fromCharCode.apply(null,out);
+}
+
+function foldStrings(s){
+    let old="";
+    for(let i=0;i<30&&s!==old;i++){
+        old=s;
+        s=s.replace(/(["'])([^"']*)\1\s*\.\.\s*(["'])([^"']*)\3/g,(m,q1,s1,q2,s2)=>q1+s1+s2+q1);
+        s=s.replace(/(["'])\s*\.\.\s*(["'])/g,(m,q1,q2)=>q1+q2);
+    }
+    return s;
+}
+
+function foldArithmetic(s){
+    return applyOutsideStrings(s,x=>{
+        for(let i=0;i<8;i++){
+            const old=x;
+            x=x.replace(/[0-9a-fA-FxX.]+(\s*[+\-*\/%^]\s*[0-9a-fA-FxX.]+)+/g,m=>{
+                const r=evalNumericExpr(m);
+                return r!==null?String(r):m;
+            });
+            if(old===x) break;
+        }
+        return x;
+    });
+}
+
+function decodeNumericTables(s){
+    return s.replace(/\{((?:\s*\d+\s*,){2,}\s*\d+)\}/g,(m,body)=>{
+        const nums=body.split(",").map(x=>Number(x.trim()));
+        if(nums.some(x=>x<32||x>126||!Number.isInteger(x))) return m;
+        const text=nums.map(x=>String.fromCharCode(x)).join("");
+        const printable=count(/[\x20-\x7E]/g,text);
+        if(printable/text.length>0.8){
+            return '"'+text.replace(/\\/g,'\\\\').replace(/"/g,'\\"')+'"';
+        }
+        return m;
+    });
+}
+
+function decodeHexStrings(s){
+    return s.replace(/(["'])((?:[0-9a-fA-F]{2}){6,})\1/g,(m,q,h)=>{
+        let out="";
+        for(let i=0;i<h.length;i+=2) out+=String.fromCharCode(parseInt(h.slice(i,i+2),16));
+        const printable=count(/[\x20-\x7E]/g,out);
+        return printable/out.length>0.7?q+out+q:m;
+    });
+}
+
+function decodeUrlEncoding(s){
+    return s.replace(/(["'])([^"']{8,})\1/g,(m,q,v)=>{
+        if(!/%[0-9a-fA-F]{2}/.test(v)) return m;
+        try{ const d=decodeURIComponent(v); return d!==v?q+d+q:m; }catch(e){ return m; }
+    });
+}
+
+function cleanNoiseComments(s){
+    return s.replace(/--[^\n]{300,}/g,"");
+}
+
+function unwrapSimpleReturn(s){
+    return s.replace(/^\s*return\s*\(\s*function\s*\(\.\.\.\)\s*([\s\S]*)\s*end\s*\)\s*\(\s*\.\.\.\s*\)\s*;?\s*$/i,"$1");
+}
+
+function unpackLoaders(s){
+    return s.replace(/loadstring\s*\(\s*(["'])([\s\S]*?)\1\s*\)\s*\(\s*\)/g,(m,q,content)=>content);
+}
+
+/* =========================================================
+   PROPAGACIÓN DE CONSTANTES (string-aware)
+========================================================= */
+function propagateConstants(s){
+    const constMap={};
+    const lines=s.split('\n');
+    for(let i=0;i<lines.length;i++){
+        const clean=lines[i].replace(/--.*$/,'').trim();
+        if(!clean) continue;
+        const match=clean.match(/^local\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.+?)\s*$/);
+        if(!match) continue;
+        const varName=match[1];
+        let valueExpr=match[2].trim();
+        if(/^-?\d+\.?\d*$/.test(valueExpr)) constMap[varName]={type:'number',value:parseFloat(valueExpr)};
+        else if(/^["'].*["']$/.test(valueExpr)) constMap[varName]={type:'string',value:valueExpr.slice(1,-1)};
+        else if(/^\w+\s*[+\-*\/%]\s*\d+$/.test(valueExpr)){
+            const parts=valueExpr.split(/([+\-*\/%])/);
+            const left=parts[0].trim(), op=parts[1], right=parseFloat(parts[2]);
+            if(constMap[left]&&constMap[left].type==='number'){
+                const a=constMap[left].value; let r;
+                if(op==='+')r=a+right; else if(op==='-')r=a-right; else if(op==='*')r=a*right;
+                else if(op==='/')r=a/right; else if(op==='%')r=a%right;
+                if(Number.isFinite(r)) constMap[varName]={type:'number',value:r};
+            }
+        }
+    }
+    const linesOut=[];
+    for(const line of lines){
+        let modified=line;
+        for(const [varName,data] of Object.entries(constMap)){
+            if(new RegExp('^\\s*local\\s+'+varName+'\\s*=').test(line)) continue;
+            modified=applyOutsideStrings(modified,x=>{
+                let text=x;
+                const re=new RegExp('\\b'+varName+'\\b','g');
+                if(data.type==='number') text=text.replace(re,String(data.value));
+                else if(data.type==='string'){
+                    const esc=data.value.replace(/\\/g,'\\\\').replace(/"/g,'\\"');
+                    text=text.replace(re,'"'+esc+'"');
+                }
+                return text;
+            });
+        }
+        linesOut.push(modified);
+    }
+    return linesOut.join('\n');
+}
+
+/* =========================================================
+   CONTROL FLOW FLATTENING
+========================================================= */
+function deobfuscateControlFlow(s){
+    const lines=s.split('\n');
+    let whileStart=-1;
+    for(let i=0;i<lines.length;i++){ if(/^\s*while\s+true\s+do\s*$/.test(lines[i])){ whileStart=i; break; } }
+    if(whileStart===-1) return s;
+    let depth=0, whileEnd=-1;
+    for(let i=whileStart;i<lines.length;i++){
+        const line=lines[i];
+        if(/\bwhile\b/.test(line)&&!/end/.test(line)) depth++;
+        if(/\bend\b/.test(line)) depth--;
+        if(depth===0&&i>whileStart){ whileEnd=i; break; }
+    }
+    if(whileEnd===-1) return s;
+    const bodyLines=lines.slice(whileStart+1,whileEnd);
+    let initialState=null;
+    for(const line of bodyLines){
+        const m=line.match(/local\s+(\w+)\s*=\s*(\d+)/);
+        if(m){ initialState=parseInt(m[2]); break; }
+    }
+    if(initialState===null) return s;
+    const blocks={}; let currentBlock=null, currentLines=[];
+    for(const line of bodyLines){
+        const ifM=line.match(/^\s*if\s+(\w+)\s*==\s*(\d+)\s+then\s*$/);
+        const elseifM=line.match(/^\s*elseif\s+(\w+)\s*==\s*(\d+)\s+then\s*$/);
+        const elseM=/^\s*else\s*$/.test(line);
+        const endM=/^\s*end\s*$/.test(line);
+        if(ifM||elseifM){
+            if(currentBlock!==null){ blocks[currentBlock]=currentLines.join('\n'); currentLines=[]; }
+            currentBlock=parseInt((ifM||elseifM)[2]);
+        }else if(elseM){
+            if(currentBlock!==null){ blocks[currentBlock]=currentLines.join('\n'); currentLines=[]; }
+            currentBlock=-1;
+        }else if(endM){
+            if(currentBlock!==null){ blocks[currentBlock]=currentLines.join('\n'); currentLines=[]; currentBlock=null; }
+        }else{
+            if(currentBlock!==null) currentLines.push(line);
+        }
+    }
+    let keys=Object.keys(blocks).map(Number).sort((a,b)=>a-b);
+    const elseBlock=blocks[-1];
+    keys=keys.filter(k=>k!==-1);
+    if(elseBlock!==undefined) keys.push(-1);
+    const result=[];
+    for(const key of keys){ if(blocks[key]) result.push(blocks[key]); }
+    const before=lines.slice(0,whileStart).join('\n');
+    const after=lines.slice(whileEnd+1).join('\n');
+    return before+'\n'+result.join('\n')+'\n'+after;
+}
+
+/* =========================================================
+   VM UNPACKER (heurístico)
+========================================================= */
+function unpackVM(s){
+    const lines=s.split('\n');
+    let instrStart=-1, instrEnd=-1;
+    for(let i=0;i<lines.length;i++){
+        if(/^\s*local\s+\w+\s*=\s*\{/.test(lines[i])){
+            let depth=0;
+            for(let j=i;j<lines.length;j++){
+                const line=lines[j];
+                depth+=(line.match(/\{/g)||[]).length;
+                depth-=(line.match(/\}/g)||[]).length;
+                if(depth===0&&j>i){ instrStart=i; instrEnd=j; break; }
+            }
+            if(instrStart!==-1) break;
+        }
+    }
+    if(instrStart===-1||instrEnd===-1) return s;
+    const instrLines=lines.slice(instrStart,instrEnd+1);
+    const instrStr=instrLines.join('\n');
+    const nums=[]; const numM=instrStr.match(/\b(\d+)\b/g);
+    if(numM){ for(const n of numM) nums.push(parseInt(n)); }
+    if(nums.length===0) return s;
+    let decoded='';
+    for(const n of nums){
+        if(n>=32&&n<=126) decoded+=String.fromCharCode(n);
+        else decoded+='\\'+n;
+    }
+    const printable=decoded.replace(/[^\x20-\x7E\n\r\t]/g,'').length;
+    if(printable/decoded.length<0.8) return s;
+    const before=lines.slice(0,instrStart).join('\n');
+    const after=lines.slice(instrEnd+1).join('\n');
+    return before+'\n-- VM unpacked: '+JSON.stringify(decoded)+'\n'+after;
+}
+
+/* =========================================================
+   PASADA ESTÁTICA (iterativa hasta estabilizar)
+========================================================= */
+function pass(s){
+    let x=s;
+    x=luaStandardEscapes(x);
+    x=numericEscapes(x);
+    x=hexEscapes(x);
+    x=unicodeEscapes(x);
+    x=decodeStringChar(x);
+    x=decodeBase64(x);
+    x=decodeBase85(x);
+    x=decodeBase91(x);
+    x=decodeHexStrings(x);
+    x=decodeUrlEncoding(x);
+    x=decodeNumericTables(x);
+    x=foldStrings(x);
+    x=foldArithmetic(x);
+    x=propagateConstants(x);
+    x=foldStrings(x);
+    x=foldArithmetic(x);
+    x=unpackLoaders(x);
+    x=cleanNoiseComments(x);
+    x=unwrapSimpleReturn(x);
+    if(useVM()){
+        x=deobfuscateControlFlow(x);
+        x=unpackVM(x);
+    }
+    return x;
+}
+function staticDeobfuscate(code){
+    let current=normalize(code);
+    for(let i=1;i<=30;i++){
+        const before=current;
+        const next=pass(current);
+        if(next===before) break;
+        current=next;
+    }
+    return current;
+}
+
+/* =========================================================
+   RENOMBRADO DE VARIABLES POR ALCANCE (lexer)
+========================================================= */
+function lexLua(src){
+    const toks=[];
+    let i=0;
+    const isDigit=c=>c>='0'&&c<='9';
+    const isHex=c=>/^[0-9a-fA-F]$/.test(c);
+    const isIdStart=c=>c==='_'||(c>='a'&&c<='z')||(c>='A'&&c<='Z');
+    const isId=c=>isIdStart(c)||isDigit(c);
+    while(i<src.length){
+        const c=src[i];
+        if(c===' '||c==='\t'||c==='\r'){
+            let j=i; while(j<src.length&&(src[j]===' '||src[j]==='\t'||src[j]==='\r')) j++;
+            toks.push({type:'ws',start:i,end:j,text:src.slice(i,j)}); i=j; continue;
+        }
+        if(c==='\n'){ toks.push({type:'nl',start:i,end:i+1,text:'\n'}); i++; continue; }
+        if(c==='-'&&src[i+1]==='-'){
+            let j=i+2;
+            if(src[j]==='['){
+                const lm=/^\[(=*)\[[\s\S]*?\]\1\]/.exec(src.slice(j));
+                if(lm){ j+=lm[0].length; toks.push({type:'comment',start:i,end:j,text:src.slice(i,j)}); i=j; continue; }
+            }
+            const nl=src.indexOf('\n',j);
+            const end=nl===-1?src.length:nl;
+            toks.push({type:'comment',start:i,end:end,text:src.slice(i,end)}); i=end; continue;
+        }
+        if(c==='['){
+            const lm=/^\[(=*)\[[\s\S]*?\]\1\]/.exec(src.slice(i));
+            if(lm){ toks.push({type:'string',start:i,end:i+lm[0].length,text:lm[0]}); i+=lm[0].length; continue; }
+        }
+        if(c==='"'||c==="'"){
+            let j=i+1, seg=c;
+            while(j<src.length){
+                const cc=src[j];
+                if(cc==='\\'&&j+1<src.length){ seg+=cc+src[j+1]; j+=2; continue; }
+                seg+=cc; j++;
+                if(cc===c) break;
+            }
+            toks.push({type:'string',start:i,end:j,text:seg}); i=j; continue;
+        }
+        if(isDigit(c)||(c==='.'&&isDigit(src[i+1]))){
+            let j=i+1;
+            if(c==='0'&&(src[i+1]==='x'||src[i+1]==='X')){
+                j++;
+                while(j<src.length&&isHex(src[j])) j++;
+            }else{
+                while(j<src.length){
+                    const cc=src[j];
+                    if(isDigit(cc)||cc==='_'||cc==='.'){ j++; continue; }
+                    if(cc==='e'||cc==='E'){
+                        const nx=src[j+1], nx2=src[j+2];
+                        if(isDigit(nx)||((nx==='+'||nx==='-')&&isDigit(nx2))){ j+=2; continue; }
+                        break;
+                    }
+                    break;
+                }
+            }
+            toks.push({type:'number',start:i,end:j,text:src.slice(i,j)}); i=j; continue;
+        }
+        const three=src.slice(i,i+3);
+        const two=src.slice(i,i+2);
+        if(three==='...'){ toks.push({type:'sym',start:i,end:i+3,text:'...'}); i+=3; continue; }
+        if(two==='..'||two==='::'||two==='=='||two==='~='||two==='<='||two==='>='||two==='//'||two==='<<'||two==='>>'){
+            toks.push({type:'sym',start:i,end:i+2,text:two}); i+=2; continue;
+        }
+        if(isIdStart(c)){
+            let j=i; while(j<src.length&&isId(src[j])) j++;
+            const text=src.slice(i,j);
+            toks.push({type:LUA_KEYWORDS.has(text)?'kw':'id',start:i,end:j,text:text}); i=j; continue;
+        }
+        toks.push({type:'sym',start:i,end:i+1,text:c}); i++; continue;
+    }
+    return toks;
+}
+
+function renameIdentifiers(src){
+    const toks=lexLua(src);
+    const scopes=[{names:new Map()}];
+    let counter=0;
+    const repl=[];
+    const isSuspicious=name=> /^[lI0O_]{3,}$/.test(name) || /^l[0-9]+_[0-9]+$/.test(name) || /_0x[0-9a-f]+/i.test(name) || name.length>=12;
+    const cur=()=>scopes[scopes.length-1];
+    function lookup(name){
+        for(let k=scopes.length-1;k>=0;k--){
+            const v=scopes[k].names.get(name);
+            if(v!==undefined) return v;
+        }
+        return null;
+    }
+    function reg(name){
+        const map=cur().names;
+        if(map.has(name)) return map.get(name);
+        if(isSuspicious(name)){ const r='v'+(++counter); map.set(name,r); return r; }
+        map.set(name,null); return null;
+    }
+    let t=0;
+    while(t<toks.length){
+        const tok=toks[t];
+        if(tok.type==='id'){
+            const r=lookup(tok.text);
+            if(r) repl.push([tok.start,tok.end,r]);
+            t++;
+        }else if(tok.type==='kw'){
+            const w=tok.text;
+            if(w==='local'){
+                let k=t+1;
+                while(k<toks.length&&(toks[k].type==='ws'||toks[k].type==='nl')) k++;
+                if(k<toks.length&&toks[k].type==='kw'&&toks[k].text==='function'){
+                    let m=k+1;
+                    while(m<toks.length&&(toks[m].type==='ws'||toks[m].type==='nl')) m++;
+                    if(m<toks.length&&toks[m].type==='id') reg(toks[m].text);
+                    t=k; continue;
+                }
+                while(k<toks.length){
+                    while(k<toks.length&&(toks[k].type==='ws'||toks[k].type==='nl')) k++;
+                    if(k<toks.length&&toks[k].type==='id'&&!LUA_KEYWORDS.has(toks[k].text)){ reg(toks[k].text); k++; }
+                    else break;
+                    while(k<toks.length&&(toks[k].type==='ws'||toks[k].type==='nl')) k++;
+                    if(k<toks.length&&toks[k].type==='sym'&&toks[k].text===','){ k++; continue; }
+                    break;
+                }
+                t=k; continue;
+            }
+            if(w==='function'){
+                scopes.push({names:new Map()});
+                let k=t+1;
+                while(k<toks.length){
+                    const x=toks[k];
+                    if(x.type==='ws'||x.type==='nl'){ k++; continue; }
+                    if(x.type==='id'&&!LUA_KEYWORDS.has(x.text)){ k++; continue; }
+                    if(x.type==='sym'&&(x.text==='.'||x.text===':')){ k++; continue; }
+                    break;
+                }
+                if(k<toks.length&&toks[k].type==='sym'&&toks[k].text==='('){
+                    k++;
+                    while(k<toks.length&&toks[k].text!==')'){
+                        const x=toks[k];
+                        if(x.type==='id'&&!LUA_KEYWORDS.has(x.text)) reg(x.text);
+                        k++;
+                    }
+                    k++;
+                }
+                t=k; continue;
+            }
+            if(w==='for'){
+                scopes.push({names:new Map()});
+                let k=t+1;
+                while(k<toks.length){
+                    while(k<toks.length&&(toks[k].type==='ws'||toks[k].type==='nl')) k++;
+                    if(k<toks.length&&toks[k].type==='id'&&!LUA_KEYWORDS.has(toks[k].text)){ reg(toks[k].text); k++; }
+                    else break;
+                    while(k<toks.length&&(toks[k].type==='ws'||toks[k].type==='nl')) k++;
+                    if(k<toks.length&&toks[k].type==='sym'&&toks[k].text===','){ k++; continue; }
+                    break;
+                }
+                t=k; continue;
+            }
+            if(w==='if'||w==='while'||w==='repeat'){
+                scopes.push({names:new Map()});
+                t++; continue;
+            }
+            if(w==='end'||w==='until'){
+                if(scopes.length>1) scopes.pop();
+                t++; continue;
+            }
+            t++;
+        }else{
+            t++;
+        }
+    }
+    if(repl.length===0) return src;
+    repl.sort((a,b)=>a[0]-b[0]);
+    let out="", pos=0;
+    for(const [s,e,txt] of repl){
+        if(s<pos) continue;
+        out+=src.slice(pos,s)+txt; pos=e;
+    }
+    out+=src.slice(pos);
+    return out;
+}
+
+/* =========================================================
+   FORMATEADOR
+========================================================= */
+function stripStringsComments(s){
+    let res=""; let i=0;
+    while(i<s.length){
+        const c=s[i];
+        if(c==='"'||c==="'"){
+            res+=' '; i++;
+            while(i<s.length){
+                const cc=s[i];
+                if(cc==='\\'){ res+='  '; i+=2; continue; }
+                res+=' '; i++;
+                if(cc===c) break;
+            }
+            continue;
+        }
+        if(c==='-'&&s[i+1]==='-'){
+            const lm=/^--\[(=*)\[[\s\S]*?\]\1\]/.exec(s.slice(i));
+            if(lm){ res+=" ".repeat(lm[0].length); i+=lm[0].length; continue; }
+            const nl=s.indexOf('\n',i);
+            const seg=nl===-1?s.slice(i):s.slice(i,nl);
+            res+=" ".repeat(seg.length); i+=seg.length; continue;
+        }
+        if(c==='['){
+            const lm=/^\[(=*)\[[\s\S]*?\]\1\]/.exec(s.slice(i));
+            if(lm){ res+=" ".repeat(lm[0].length); i+=lm[0].length; continue; }
+        }
+        res+=c; i++;
+    }
+    return res;
+}
+
+function formatLua(s){
+    const lines=s.split('\n');
+    const out=[];
+    let indent=0;
+    for(const raw of lines){
+        let line=raw.trim();
+        if(!line){ out.push(""); continue; }
+        const code=stripStringsComments(raw).trim();
+        const closes=(code.match(/\b(end|until)\b/g)||[]).length + (code.match(/\}/g)||[]).length;
+        if(closes>0) indent=Math.max(0,indent-closes);
+        out.push("    ".repeat(indent)+line);
+        const opens=(code.match(/\b(function|if|for|while|repeat|do)\b/g)||[]).length + (code.match(/\{/g)||[]).length;
+        indent+=opens;
+    }
+    return out.join('\n');
+}
+
+/* =========================================================
+   MOTOR SANDBOX (Fengari) – hook de loadstring/load
+========================================================= */
+let fengariReady = typeof window.fengari !== "undefined";
+let fengariErr = null;
+
+function loadFengari(){
+    return new Promise(resolve=>{
+        if(fengariReady){ resolve(true); return; }
+        const s=document.createElement("script");
+        s.src="https://cdn.jsdelivr.net/npm/fengari-web@0.1.4/dist/fengari-web.min.js";
+        s.onload=()=>{ fengariReady=typeof window.fengari!=="undefined"; if(!fengariReady) fengariErr="Fengari no cargó correctamente."; resolve(fengariReady); };
+        s.onerror=()=>{ fengariErr="No se pudo cargar Fengari (¿sin internet?). Solo pasada estática."; resolve(false); };
+        document.head.appendChild(s);
+    });
+}
+
+const FENGARI_PRELUDE = `
+local orig_load = load
+_G.loadstring = function(s, chunkname)
+    if type(s) == "string" then pcall(captureString, s) end
+    return orig_load(s, chunkname, "t")
+end
+_G.load = function(s, chunkname, mode, env)
+    if type(s) == "string" then pcall(captureString, s) end
+    return orig_load(s, chunkname, mode, env)
+end
+if not string.dump then string.dump = function() return "" end end
+if not _G.bit32 then
+    _G.bit32 = {
+        bxor = function(a,b) return a ~ b end,
+        band = function(a,b) return a & b end,
+        bor  = function(a,b) return a | b end,
+        bnot = function(a) return ~a end,
+        lshift = function(a,b) return a << b end,
+        rshift = function(a,b) return a >> b end,
+        arshift = function(a,b) return math.floor(a / (2 ^ b)) end,
+        tobit = function(a) return a end
+    }
+end
+if not _G.game then _G.game = {} end
+_G.game.GetService = function(self, name)
+    local s = {}
+    if name == "Players" then s.LocalPlayer = { Name = "Sandbox", UserId = 1, Character = nil } end
+    s.FindFirstChild = function() return nil end
+    s.GetChildren = function() return {} end
+    s.WaitForChild = function() return nil end
+    return s
+end
+_G.game.PlaceId = 0
+_G.game.HttpGet = function() return "" end
+_G.game.HttpGetAsync = function() return "" end
+_G.game.ReplicatedStorage = {}
+_G.workspace = _G.workspace or {}
+_G.workspace.FindFirstChild = function() return nil end
+_G.workspace.GetChildren = function() return {} end
+_G.workspace.WaitForChild = function() return nil end
+_G.workspace.CurrentCamera = nil
+_G.Instance = _G.Instance or { new = function() return {} end }
+_G.Enum = _G.Enum or {}
+_G.task = _G.task or { wait = function() return false end, spawn = function(f, ...) local co = coroutine.create(f); coroutine.resume(co, ...) end, defer = function(f, ...) f(...) end, delay = function(_, f) f() end }
+_G.getfenv = _G.getfenv or function() return _G end
+_G.setfenv = _G.setfenv or function(f) return f end
+_G.getgenv = _G.getgenv or function() return _G end
+_G.getgc = _G.getgc or function() return {} end
+_G.iscclosure = _G.iscclosure or function() return false end
+_G.islclosure = _G.islclosure or function() return true end
+_G.identifyexecutor = _G.identifyexecutor or function() return "Sandbox" end
+_G.request = _G.request or function() return { StatusCode = 0, Body = "" } end
+_G.syn = _G.syn or { request = function() return { StatusCode = 0, Body = "" } end }
+_G.http_request = _G.http_request or _G.request
+_G.readfile = _G.readfile or function() return "" end
+_G.writefile = _G.writefile or function() return true end
+_G.isfile = _G.isfile or function() return false end
+_G.isfolder = _G.isfolder or function() return false end
+_G.makefolder = _G.makefolder or function() return true end
+_G.delfolder = _G.delfolder or function() return true end
+_G.decompress = _G.decompress or function(s) return s end
+_G.lz4 = _G.lz4 or { decompress = function(s) return s end }
+_G.inflate = _G.inflate or function(s) return s end
+_G.gunzip = _G.gunzip or function(s) return s end
+_G.crypt = _G.crypt or { base64encode = function(s) return s end, base64decode = function(s) return s end, generatebytes = function(n) return {} end }
+_G.debug = _G.debug or { getinfo = function() return { what = "C", currentline = -1 } end, sethook = function() end, getupvalue = function() return nil end, setupvalue = function() return nil end, getregistry = function() return {} end }
+_G.os.clock = _G.os.clock or function() return 0 end
+_G.os.time = _G.os.time or function() return 0 end
+_G.os.date = _G.os.date or function() return "" end
+_G.os.getenv = _G.os.getenv or function() return nil end
+_G.collectgarbage = _G.collectgarbage or function() return 0 end
+_G.newproxy = _G.newproxy or function() return {} end
+_G.print = _G.print or print
+`;
+
+function sandboxRun(code){
+    const result={ ok:false, captured:[], output:"" };
+    let L=null;
+    try{
+        const { lua, lauxlib, lualib, to_luastring, to_jsstring } = window.fengari;
+        L=lauxlib.luaL_newstate();
+        lualib.luaL_openlibs(L);
+
+        const captured=[];
+        const cap=function(luaState){
+            if(lua.lua_type(luaState,1)===lua.LUA_TSTRING){
+                try{
+                    const u8=lua.lua_tolstring(luaState,1);
+                    if(u8&&u8.length>0) captured.push(to_jsstring(u8));
+                }catch(e){}
+            }
+            return 0;
+        };
+        lua.lua_pushcfunction(L,cap);
+        lua.lua_setglobal(L,"captureString");
+
+        let insCount=0;
+        const limit=120000000;
+        const hook=function(luaState){
+            insCount++;
+            if(insCount>limit){
+                lua.luaL_error(luaState,"Limite de instrucciones alcanzado (posible anti-debug). Capas capturadas: "+captured.length);
+            }
+            return 0;
+        };
+        lua.lua_sethook(L,hook,lua.LUA_MASKCOUNT,1000);
+
+        const pre=lauf.luaL_loadstring(L,to_luastring(FENGARI_PRELUDE));
+        if(pre!==lua.LUA_OK){
+            result.output="Error preludio: "+to_jsstring(lua.lua_tostring(L,-1));
+            return result;
+        }
+        lua.lua_pcall(L,0,0,0);
+
+        const cres=lauxlib.luaL_loadstring(L,to_luastring(code));
+        if(cres!==lua.LUA_OK){
+            result.output="Codigo invalido en sandbox: "+to_jsstring(lua.lua_tostring(L,-1));
+            return result;
+        }
+        const status=lua.lua_pcall(L,0,0,0);
+        if(status!==lua.LUA_OK){
+            result.output="Error en sandbox: "+to_jsstring(lua.lua_tolstring(L,-1));
+        }else{
+            result.output="Ejecucion completada en sandbox.";
+            result.ok=true;
+        }
+        result.captured=captured;
+        return result;
+    }catch(e){
+        result.output="Excepcion sandbox: "+(e&&e.message?e.message:String(e));
+        return result;
+    }finally{
+        if(L){ try{ window.fengari.lauxlib.lua_close(L); }catch(e){} }
+    }
+}
+
+function isBinary(s){
+    let printable=0;
+    for(let i=0;i<s.length;i++){
+        const c=s.charCodeAt(i);
+        if(c===0) return true;
+        if((c>=32&&c<=126)||c===10||c===13||c===9) printable++;
+    }
+    return printable/s.length<0.6;
+}
+
+/* =========================================================
+   ORQUESTADOR MULTI-CAPA
+========================================================= */
+function deobfuscatePipeline(code){
+    const log=[];
+    const seen=new Set();
+    const queue=[normalize(code)];
+    const artifacts=[];
+    let final="";
+    let layers=0;
+    const maxL=Math.max(10,maxLayers());
+    while(queue.length>0&&layers<maxL){
+        const src=queue.shift();
+        if(seen.has(src)) continue;
+        seen.add(src);
+        layers++;
+        let next=staticDeobfuscate(src);
+        log.push({kind:"estatico",layer:layers,before:src.length,after:next.length});
+        if(useSandbox()&&fengariReady){
+            const res=sandboxRun(next);
+            log.push({kind:"sandbox",layer:layers,caps:res.captured.length,note:res.output});
+            for(const p of res.captured){
+                if(!p||p.length<8) continue;
+                if(seen.has(p)) continue;
+                if(isBinary(p)){
+                    artifacts.push(p);
+                    log.push({kind:"bytecode",layer:layers,len:p.length});
+                }else{
+                    queue.push(p);
+                }
+            }
+        }
+        final=next;
+    }
+    return { final, log, artifacts, layers };
+}
+
+/* =========================================================
+   DETECCIÓN DE OFUSCADOR
+========================================================= */
+function detectObfuscation(code){
+    const i={};
+    i.escapes=(code.match(/\\x[0-9a-fA-F]{2}/g)||[]).length+(code.match(/\\(?:[0-9]{1,3})/g)||[]).length;
+    i.stringChar=(code.match(/string\s*\.\s*char\s*\(/gi)||[]).length;
+    i.base64=(code.match(/['"]([A-Za-z0-9+/]{30,}={0,2})['"]/g)||[]).length;
+    i.base85=(code.match(/<~[\s\S]*?~>/g)||[]).length;
+    i.xor=(code.match(/bit32\s*\.\s*bxor|bxor\s*\(/g)||[]).length;
+    i.loadstring=(code.match(/\bloadstring\s*\(/g)||[]).length;
+    i.vm=(code.match(/while\s+true\s+do/g)||[]).length+(code.match(/elseif\s+\w+\s*==\s*\d+\s*then/g)||[]).length;
+    i.flatten=(code.match(/while\s+true\s+do/gi)||[]).length&&(code.match(/elseif\s+\w+\s*==\s*\d+\s*then/g)||[]).length?1:0;
+    i.customDecoder=(code.match(/local\s+function\s+\w+\([^)]*\).*?return[\s\S]*?string\.char/gi)||[]).length;
+    i.bytecode=(code.match(/\{\s*\d+(?:\s*,\s*\d+){50,}\s*\}/g)||[]).length;
+    i.hexTable=(code.match(/\{\s*0[xX][0-9a-fA-F]{2}/g)||[]).length;
+    i.longVars=(code.match(/\b(l_?\d+_[0-9_]+|_0x[0-9a-fA-F]+)\b/g)||[]).length;
+
+    let type="Limpio / Ligeramente ofuscado", conf=20;
+    const c=i;
+    if(c.customDecoder>0&&c.loadstring>0){ type="Loader personalizado + loadstring"; conf=85; }
+    else if(c.bytecode>=2||c.hexTable>=2){ type="Bytecode / arrays numericos"; conf=80; }
+    else if(c.vm>=3){ type="VM + Control Flow Flattening"; conf=80; }
+    else if(c.flatten&&c.vm>=2){ type="Control Flow Flattening"; conf=70; }
+    else if(c.xor>=5){ type="Cifrado XOR"; conf=70; }
+    else if(c.base85>=2){ type="Base85 (IronBrew)"; conf=75; }
+    else if(c.base64>=3){ type="Base64"; conf=70; }
+    else if(c.stringChar>=8){ type="string.char"; conf=65; }
+    else if(c.longVars>=5){ type="Renombrado agresivo"; conf=50; }
+    else if(c.loadstring>0){ type="Wrapper loadstring"; conf=60; }
+    else if(c.escapes>=20){ type="Escapes"; conf=50; }
+    return { type, confidence:conf, indicators:i };
+}
+
+/* =========================================================
+   FLUJO PRINCIPAL
+========================================================= */
+async function analyze(){
+    let code=input.value.trim();
+    if(!code){ statusEl.textContent="No hay codigo"; return; }
+    statusEl.textContent="Analizando...";
+    analysisInfo.textContent="Preparando motor...";
+    try{
+        if(useSandbox()&&!fengariReady) await loadFengari();
+        const detection=detectObfuscation(code);
+        const pipeline=deobfuscatePipeline(code);
+        let result=pipeline.final;
+        if(useRename()) result=renameIdentifiers(result);
+        const formatted=formatLua(result);
+        output.value=formatted;
+        outputStats.textContent=formatted.length.toLocaleString()+" caracteres";
+
+        const before=code.length;
+        const stats=[
+            `Detección: ${detection.type}`,
+            `Confianza: ${detection.confidence}%`,
+            ``,
+            `Indicadores:`,
+            JSON.stringify(detection.indicators,null,2),
+            ``,
+            `Entrada: ${before.toLocaleString()} caracteres`,
+            `Salida: ${formatted.length.toLocaleString()} caracteres`,
+            `Capas procesadas: ${pipeline.layers}`,
+            `Artefactos binarios (bytecode): ${pipeline.artifacts.length}`
+        ].join("\n");
+        tabStats.textContent=stats;
+
+        let layersText=`Motor: ${fengariReady?"Sandbox Fengari activo":"Solo pasada estatica"}\n\n`;
+        for(const h of pipeline.log){
+            if(h.kind==="estatico") layersText+=`Capa ${h.layer} · estático: ${h.before} → ${h.after} chars\n`;
+            else if(h.kind==="sandbox") layersText+=`Capa ${h.layer} · sandbox: ${h.caps} payload(s) capturado(s)\n   ${h.note}\n`;
+            else if(h.kind==="bytecode") layersText+=`Capa ${h.layer} · BYTECODE binario (${h.len} bytes) extraído\n`;
+        }
+        tabLayers.textContent=layersText;
+
+        renderSandboxLog(pipeline);
+
+        const vars=formatted.match(/\bv\d+\b/g)||[];
+        analysisInfo.innerHTML=`<span class="ok">🔍 ${detection.type}</span> (${detection.confidence}%) · Capas: ${pipeline.layers} · Capturas sandbox: ${countSandboxCaps(pipeline.log)} · Variables renombradas: ${vars.length} · Artefactos: ${pipeline.artifacts.length}`;
+        statusEl.textContent="Listo ✓";
+    }catch(err){
+        output.value="ERROR DE ANÁLISIS\n\n"+(err&&err.message?err.message:String(err));
+        analysisInfo.textContent="El análisis encontró un error.";
+        statusEl.textContent="Error";
+        console.error(err);
+    }
+}
+function countSandboxCaps(log){
+    let n=0; for(const h of log){ if(h.kind==="sandbox") n+=h.caps; } return n;
+}
+function renderSandboxLog(pipeline){
+    let html="";
+    if(!fengariReady&&useSandbox()) html+=`<div class="layer-item"><span class="tag warn">⚠ ${fengariErr||"Fengari no disponible"}</span><br>Las capas que dependen de ejecutar decodificadores no podrán pelarse.</div>`;
+    for(const h of pipeline.log){
+        if(h.kind==="sandbox"){
+            html+=`<div class="layer-item"><span class="tag">SANDBOX · Capa ${h.layer}</span> · ${h.caps} captura(s)<br><span style="color:var(--muted)">${h.note}</span></div>`;
+        }else if(h.kind==="bytecode"){
+            html+=`<div class="layer-item"><span class="tag bad">BYTECODE · Capa ${h.layer}</span> · ${h.len} bytes (no descompilable en navegador)</div>`;
+        }
+    }
+    if(pipeline.artifacts.length>0){
+        html+=`<div class="layer-item"><button onclick="downloadArtifacts()" class="primary">💾 DESCARGAR ${pipeline.artifacts.length} artefacto(s) binarios</button></div>`;
+    }
+    if(html==="") html=`<div class="layer-item" style="color:var(--muted)">Sin actividad de sandbox (desactiva la pestaña o el código no usaba loadstring).</div>`;
+    sandboxLog.innerHTML=html;
+}
+
+/* =========================================================
+   ACCIONES DE UI
+========================================================= */
+async function copyResult(){
+    if(!output.value) return;
+    try{ await navigator.clipboard.writeText(output.value); statusEl.textContent="Copiado ✓"; }
+    catch(e){ selectResult(); document.execCommand("copy"); statusEl.textContent="Copiado ✓"; }
+}
+function selectResult(){ output.focus(); output.select(); }
+function downloadResult(){
+    if(!output.value) return;
+    const blob=new Blob([output.value],{type:"text/plain;charset=utf-8"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    a.href=url; a.download="edsusito_deobfuscated.lua"; a.click();
+    URL.revokeObjectURL(url);
+}
+let artifactsGlobal=[];
+function downloadArtifacts(){
+    artifactsGlobal.forEach((art,i)=>{
+        const blob=new Blob([art],{type:"application/octet-stream"});
+        const url=URL.createObjectURL(blob);
+        const a=document.createElement("a");
+        a.href=url; a.download="bytecode_layer_"+(i+1)+".bin"; a.click();
+        URL.revokeObjectURL(url);
+    });
+    statusEl.textContent="Artefactos descargados ✓";
+}
+function clearAll(){
+    input.value=""; output.value=""; urlBox.value="";
+    inputStats.textContent="0 caracteres"; outputStats.textContent="0 caracteres";
+    analysisInfo.textContent="Esperando análisis."; statusEl.textContent="Listo";
+    tabStats.textContent=""; tabLayers.textContent=""; sandboxLog.innerHTML="";
+}
+function openFile(){
+    const fi=document.createElement("input");
+    fi.type="file"; fi.accept=".lua,.txt,.luau";
+    fi.onchange=()=>{
+        const f=fi.files[0];
+        if(!f) return;
+        const r=new FileReader();
+        r.onload=()=>{ input.value=normalize(r.result); inputStats.textContent=input.value.length.toLocaleString()+" caracteres"; };
+        r.readAsText(f);
+    };
+    fi.click();
+}
+async function loadURL(){
+    const u=urlBox.value.trim();
+    if(!u) return;
+    statusEl.textContent="Descargando URL...";
+    try{
+        const res=await fetch(u);
+        if(!res.ok) throw new Error("HTTP "+res.status);
+        input.value=normalize(await res.text());
+        inputStats.textContent=input.value.length.toLocaleString()+" caracteres";
+        statusEl.textContent="URL cargada ✓";
+    }catch(e){
+        statusEl.textContent="No se pudo cargar la URL";
+        inputInfo.textContent="Error: "+(e&&e.message?e.message:String(e));
+    }
+}
+
+/* =========================================================
+   EJEMPLO MULTICAPA
+========================================================= */
+function loadHardExample(){
+    const deep='print("\\104\\97\\99\\107\\101\\97\\100" .. " \\116\\105\\101\\114\\97" .. " \\50")';
+    let hex="";
+    for(let i=0;i<deep.length;i++) hex+=(deep.charCodeAt(i)^42).toString(16).padStart(2,"0");
+    const code=[
+        "-- Ejemplo multicapa: loader con decodificador XOR personalizado",
+        "-- El sandbox ejecuta 'dec' y captura el payload que pasa a loadstring",
+        "local function dec(s)",
+        "    local t = {}",
+        "    for i = 1, #s, 2 do",
+        "        local b = tonumber(s:sub(i, i + 1), 16)",
+        "        table.insert(t, string.char(b ~ 42))",
+        "    end",
+        "    return table.concat(t)",
+        "end",
+        "local payload = \""+hex+"\"",
+        "local f = loadstring(dec(payload))",
+        "f()"
+    ].join("\n");
+    input.value=code;
+    inputStats.textContent=input.value.length.toLocaleString()+" caracteres";
+    output.value="";
+    outputStats.textContent="0 caracteres";
+    analysisInfo.textContent="Ejemplo multicapa cargado · pulsa DESOFUSCAR";
+    statusEl.textContent="Ejemplo listo";
+}
+
+if(typeof window.fengari==="undefined"){
+    loadFengari();
+}
+</script>
+</body>
+</html>
